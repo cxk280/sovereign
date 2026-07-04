@@ -69,8 +69,8 @@ curl localhost:8080/v1/models
 
 ## Build order
 
-- [ ] **0 — Scaffold + governance** *(in progress)*
-- [ ] 1 — Inference + gateway (local $0)
+- [x] **0 — Scaffold + governance**
+- [x] **1 — Inference + gateway (local $0)**
 - [ ] 2 — RAG + MCP servers
 - [ ] 3 — Eval + leaderboard
 - [ ] 4 — GitLab CI/CD (live)

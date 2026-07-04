@@ -1,0 +1,18 @@
+# Model registry — versions, quantization, serving backend, and task routing.
+# Add candidate models here; the eval harness (Step 3) produces the evidence for
+# which model each task should route to. Local $0 dev uses the Ollama backend.
+models:
+  - name: qwen2.5-coder:1.5b
+    version: "1.5b-instruct-q4_k_m"
+    backend: ollama
+    quantization: Q4_K_M
+    context_length: 32768
+    tasks: [code-gen, code-review, test-gen, chat]
+
+routing:
+  default: qwen2.5-coder:1.5b
+  by_task:
+    code-gen: qwen2.5-coder:1.5b
+    code-review: qwen2.5-coder:1.5b
+    test-gen: qwen2.5-coder:1.5b
+    chat: qwen2.5-coder:1.5b
