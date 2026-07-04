@@ -15,7 +15,11 @@ gateway = ["fastapi>=0.115", "uvicorn>=0.32", "httpx>=0.27", "pyyaml>=6.0", "pro
 rag = ["qdrant-client>=1.12", "sentence-transformers>=3.3"]
 mcp = ["mcp>=1.1"]
 eval = ["matplotlib>=3.9", "pyyaml>=6.0", "httpx>=0.27"]
-dashboard = ["fastapi>=0.115", "uvicorn>=0.32", "pyyaml>=6.0", "pydantic>=2.9"]
+# dashboard_api imports the gateway package (gateway.registry), and importing it
+# pulls gateway's full runtime via gateway/__init__ — so this extra carries the
+# same deps as [gateway] to stay self-sufficient (a clean `.[dashboard]` install
+# must be able to import gateway without ModuleNotFoundError).
+dashboard = ["fastapi>=0.115", "uvicorn>=0.32", "httpx>=0.27", "pyyaml>=6.0", "prometheus-client>=0.21", "pydantic>=2.9"]
 dev = ["ruff>=0.8", "mypy>=1.13", "pytest>=8.3", "pytest-asyncio>=0.24"]
 
 [project.scripts]
