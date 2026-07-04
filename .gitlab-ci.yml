@@ -1,0 +1,53 @@
+# sovereign — GitLab CI/CD (the primary pipeline; GitHub runs a thin mirror).
+# `verify` runs on every push/MR. The `ai` jobs run only on merge requests and
+# call the internal gateway ($SOVEREIGN_GATEWAY_URL) — so code never leaves for a
+# third-party AI. They need a runner that can reach the gateway, plus CI/CD
+# variables: GITLAB_TOKEN (api scope) and SOVEREIGN_GATEWAY_URL.
+
+stages:
+  - verify
+  - ai
+
+.python:
+  image: python:3.11-slim
+  before_script:
+    - pip install -q uv
+    - uv sync --extra dev --extra gateway --extra eval
+
+verify:
+  extends: .python
+  stage: verify
+  script:
+    - uv run ruff check .
+    - uv run ruff format --check .
+    - uv run mypy sovereign gateway rag mcp_servers eval ci ide adoption
+    - uv run pytest -q
+
+secret-scan:
+  stage: verify
+  image:
+    name: zricethezav/gitleaks:latest
+    entrypoint: [""]
+  script:
+    - gitleaks detect --source . --no-banner --redact
+
+.ai:
+  extends: .python
+  stage: ai
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+ai_review:
+  extends: .ai
+  script:
+    - uv run python -m ci.review
+
+ai_test_gen:
+  extends: .ai
+  script:
+    - uv run python -m ci.testgen
+
+ai_mr_summary:
+  extends: .ai
+  script:
+    - uv run python -m ci.summary

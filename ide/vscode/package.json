@@ -1,0 +1,25 @@
+{
+  "name": "sovereign",
+  "displayName": "sovereign",
+  "description": "Private, in-house AI: inline completions and code review backed by your gateway.",
+  "version": "0.0.1",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Machine Learning", "Programming Languages"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "sovereign.reviewSelection", "title": "sovereign: Review Selection" }
+    ],
+    "configuration": {
+      "title": "sovereign",
+      "properties": {
+        "sovereign.gatewayUrl": {
+          "type": "string",
+          "default": "http://localhost:8080",
+          "description": "Base URL of the sovereign gateway."
+        }
+      }
+    }
+  }
+}

@@ -22,7 +22,7 @@ from gateway.config import Settings, load_settings
 from gateway.metrics import LATENCY, REQUESTS, TOKENS
 from gateway.registry import Registry, load_registry
 from gateway.router import ModelResolutionError, Router
-from gateway.schemas import ChatCompletionRequest
+from gateway.schemas import ChatCompletionRequest, CompletionRequest
 
 
 def build_backends(settings: Settings) -> dict[str, Backend]:
@@ -87,11 +87,12 @@ def create_app(registry: Registry, backends: dict[str, Backend]) -> FastAPI:
             ],
         }
 
-    @app.post("/v1/chat/completions")
-    async def chat_completions(req: ChatCompletionRequest, request: Request) -> dict[str, Any]:
-        task_hint = request.headers.get("x-sovereign-task")
+    async def _proxy(
+        requested: str | None, task_hint: str | None, payload: dict[str, Any], kind: str
+    ) -> dict[str, Any]:
+        """Resolve → dispatch to the backend (chat or completions) → record metrics."""
         try:
-            spec, task = router.resolve(req.model, task_hint)
+            spec, task = router.resolve(requested, task_hint)
         except ModelResolutionError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -99,12 +100,10 @@ def create_app(registry: Registry, backends: dict[str, Backend]) -> FastAPI:
         if backend is None:
             raise HTTPException(status_code=503, detail=f"backend {spec.backend!r} not available")
 
-        payload = req.model_dump(exclude_none=True)
-        payload.pop("model", None)
-
+        call = backend.chat if kind == "chat" else backend.completions
         start = time.perf_counter()
         try:
-            result = await backend.chat(spec.name, payload)
+            result = await call(spec.name, payload)
         except Exception as exc:  # backend/network failure → 502, recorded
             REQUESTS.labels(spec.name, task, "error").inc()
             raise HTTPException(status_code=502, detail=f"backend error: {exc}") from exc
@@ -116,6 +115,19 @@ def create_app(registry: Registry, backends: dict[str, Backend]) -> FastAPI:
             TOKENS.labels(spec.name, "prompt").inc(usage.get("prompt_tokens") or 0)
             TOKENS.labels(spec.name, "completion").inc(usage.get("completion_tokens") or 0)
         return result
+
+    @app.post("/v1/chat/completions")
+    async def chat_completions(req: ChatCompletionRequest, request: Request) -> dict[str, Any]:
+        payload = req.model_dump(exclude_none=True)
+        payload.pop("model", None)
+        return await _proxy(req.model, request.headers.get("x-sovereign-task"), payload, "chat")
+
+    @app.post("/v1/completions")
+    async def completions(req: CompletionRequest, request: Request) -> dict[str, Any]:
+        payload = req.model_dump(exclude_none=True)
+        payload.pop("model", None)
+        task_hint = request.headers.get("x-sovereign-task", "code-gen")
+        return await _proxy(req.model, task_hint, payload, "completions")
 
     return app
 

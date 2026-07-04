@@ -1,0 +1,20 @@
+{
+  "_comment": "Drop into ~/.continue/config.json to point Continue.dev at the sovereign gateway. Chat + tab-autocomplete run entirely on your infrastructure.",
+  "models": [
+    {
+      "title": "sovereign (chat)",
+      "provider": "openai",
+      "model": "chat",
+      "apiBase": "http://localhost:8080/v1",
+      "apiKey": "none"
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "sovereign (autocomplete)",
+    "provider": "openai",
+    "model": "code-gen",
+    "apiBase": "http://localhost:8080/v1",
+    "apiKey": "none"
+  },
+  "allowAnonymousTelemetry": false
+}

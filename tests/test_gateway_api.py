@@ -30,6 +30,15 @@ class FakeBackend:
             "usage": {"prompt_tokens": 5, "completion_tokens": 2},
         }
 
+    async def completions(self, model: str, payload: dict[str, Any]) -> dict[str, Any]:
+        self.calls.append((model, payload))
+        return {
+            "id": "cmpl-fake",
+            "object": "text_completion",
+            "model": model,
+            "choices": [{"index": 0, "text": " world", "finish_reason": "stop"}],
+        }
+
     async def health(self) -> bool:
         return True
 
@@ -67,6 +76,17 @@ def test_chat_completion_routes_task_to_model_and_proxies() -> None:
     assert resp.json()["choices"][0]["message"]["content"] == "ok"
     # router mapped the "code-review" task alias to the concrete "coder" model
     assert fake.calls[0][0] == "coder"
+
+
+def test_completions_endpoint_proxies_fim() -> None:
+    client, fake = _client()
+    resp = client.post(
+        "/v1/completions", json={"model": "code-review", "prompt": "hello", "suffix": "!"}
+    )
+    assert resp.status_code == 200
+    assert resp.json()["choices"][0]["text"] == " world"
+    # FIM suffix reached the backend payload
+    assert fake.calls[0][1].get("suffix") == "!"
 
 
 def test_unknown_model_returns_404() -> None:

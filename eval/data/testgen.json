@@ -1,0 +1,12 @@
+[
+  {
+    "id": "is_even",
+    "prompt": "Write pytest-style test functions (named test_*) for a function `is_even(n)` that returns True iff n is even. Assume it is importable in scope.",
+    "reference": "def is_even(n):\n    return n % 2 == 0"
+  },
+  {
+    "id": "clamp",
+    "prompt": "Write pytest-style test functions (named test_*) for `clamp(x, lo, hi)` which returns x bounded to [lo, hi]. Assume it is importable in scope.",
+    "reference": "def clamp(x, lo, hi):\n    return max(lo, min(x, hi))"
+  }
+]

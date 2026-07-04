@@ -19,6 +19,10 @@ class Backend(Protocol):
         """Run a chat completion for ``model`` and return the OpenAI-shaped JSON."""
         ...
 
+    async def completions(self, model: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """Run a (FIM) text completion — backs IDE autocomplete."""
+        ...
+
     async def health(self) -> bool:
         """Return True if the backend is reachable and ready."""
         ...
