@@ -1,0 +1,21 @@
+gateway:
+  image: ghcr.io/cxk280/sovereign-gateway:latest
+  replicas: 2
+  port: 8080
+
+qdrant:
+  image: qdrant/qdrant:v1.12.4
+  port: 6333
+
+# vLLM on a GPU node pool. Tensor-parallel across `gpus` for multi-GPU serving.
+vllm:
+  enabled: true
+  image: vllm/vllm-openai:latest
+  model: Qwen/Qwen2.5-Coder-7B-Instruct-AWQ
+  gpus: 1
+  port: 8000
+
+dashboard:
+  enabled: true
+  image: ghcr.io/cxk280/sovereign-dashboard:latest
+  port: 80

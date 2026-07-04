@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars (gitignored) or export as TF_VAR_*. Never commit real values.
+vultr_api_key = "your-vultr-api-key"
+region        = "ewr"
+gpu_plan      = "vcg-a16-2c-8gb-2vram"
+ssh_key_ids   = ["your-vultr-ssh-key-id"]
+
+# Platform stays plan-only ($0) unless you flip these:
+# enable_vke            = true
+# enable_object_storage = true

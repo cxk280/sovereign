@@ -1,0 +1,31 @@
+{{- if .Values.dashboard.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-dashboard
+  labels: { app: sovereign-dashboard }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: sovereign-dashboard }
+  template:
+    metadata:
+      labels: { app: sovereign-dashboard }
+    spec:
+      containers:
+        - name: dashboard
+          image: {{ .Values.dashboard.image }}
+          ports:
+            - containerPort: {{ .Values.dashboard.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-dashboard
+spec:
+  type: LoadBalancer
+  selector: { app: sovereign-dashboard }
+  ports:
+    - port: 80
+      targetPort: {{ .Values.dashboard.port }}
+{{- end }}

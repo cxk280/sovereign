@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-gateway
+  labels: { app: sovereign-gateway }
+spec:
+  replicas: {{ .Values.gateway.replicas }}
+  selector:
+    matchLabels: { app: sovereign-gateway }
+  template:
+    metadata:
+      labels: { app: sovereign-gateway }
+    spec:
+      containers:
+        - name: gateway
+          image: {{ .Values.gateway.image }}
+          ports:
+            - containerPort: {{ .Values.gateway.port }}
+          env:
+            - name: OLLAMA_BASE_URL
+              value: ""
+            - name: VLLM_BASE_URL
+              value: "http://{{ .Release.Name }}-vllm:{{ .Values.vllm.port }}"
+            - name: QDRANT_URL
+              value: "http://{{ .Release.Name }}-qdrant:{{ .Values.qdrant.port }}"
+          readinessProbe:
+            httpGet: { path: /readyz, port: {{ .Values.gateway.port }} }
+          livenessProbe:
+            httpGet: { path: /healthz, port: {{ .Values.gateway.port }} }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-gateway
+spec:
+  selector: { app: sovereign-gateway }
+  ports:
+    - port: {{ .Values.gateway.port }}
+      targetPort: {{ .Values.gateway.port }}
