@@ -1,0 +1,17 @@
+[
+  {
+    "id": "off_by_one",
+    "diff": "def last(xs):\n    # return the last element\n    return xs[len(xs)]",
+    "bug_keywords": ["index", "out of range", "len(xs) - 1", "len(xs)-1", "off-by-one", "off by one", "[-1]"]
+  },
+  {
+    "id": "mutable_default",
+    "diff": "def append_item(item, bucket=[]):\n    bucket.append(item)\n    return bucket",
+    "bug_keywords": ["mutable default", "default argument", "shared", "none", "bucket=none", "aliasing"]
+  },
+  {
+    "id": "bare_except",
+    "diff": "def parse(x):\n    try:\n        return int(x)\n    except:\n        return None",
+    "bug_keywords": ["bare except", "broad except", "specific exception", "valueerror", "swallow", "except:"]
+  }
+]
