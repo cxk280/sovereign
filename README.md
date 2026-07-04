@@ -128,13 +128,24 @@ curl localhost:8080/v1/chat/completions \
   -d '{"model":"code-review","messages":[{"role":"user","content":"Review this diff for bugs."}]}'
 ```
 
+## Documentation
+
+Full docs live in [`docs/`](./docs): the [architecture](./docs/architecture.md) (system diagram +
+data flow), [decision records](./docs/adr) (serving engine, gateway vs LiteLLM, Qdrant vs pgvector,
+local vs Vultr GPU), a $0 [hands-on workshop](./docs/workshop.md), the
+[model/quantization/cost tradeoffs](./docs/tradeoffs.md), and a
+[role → feature traceability matrix](./docs/traceability.md).
+
 ## Project status
 
-`sovereign` is under active development, built in the open. The gateway, model registry/routing, the
-MCP servers, the RAG layer over your internal knowledge, model evaluation, GitLab integration, IDE
-tooling, and the operator dashboard are in place; Vultr infrastructure is landing in sequence.
-See the component table above — each directory has its own README describing what it does and how it
-fits.
+`sovereign` is built in the open. The gateway and model registry/routing, the MCP servers, the RAG
+layer, model evaluation and lifecycle, the GitLab CI/CD AI jobs, IDE tooling, adoption metrics, the
+operator dashboard, and the Vultr infrastructure-as-code are all in place — each directory has its
+own README, and the [traceability matrix](./docs/traceability.md) maps every capability to where it's
+demonstrated. The operator dashboard was built through its design gate ([`VIEWS.md`](./VIEWS.md) →
+Figma mocks → approval). The larger multi-GPU VKE topology is architected and costed but not stood
+up; the single-A16 benchmark numbers are measured on real Vultr hardware — the docs are precise about
+that boundary.
 
 ## A note on data
 
