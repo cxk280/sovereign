@@ -13,9 +13,9 @@ matrix is the map. Each row is a JD responsibility; the right column is where yo
 | 5 | **LLM inference** (vLLM / SGLang / TGI), GPU (CUDA, multi-GPU) | [`inference/`](../inference) — vLLM on Vultr GPU, llama.cpp/Ollama local; SGLang/TGI in [ADR 0001](./adr/0001-serving-engine.md) | ✅ working (vLLM measured on A16) |
 | 6 | **RAG + vector DB** | [`rag/`](../rag) — local embeddings → Qdrant; pgvector in [ADR 0003](./adr/0003-qdrant-vs-pgvector.md) | ✅ working |
 | 7 | **IDE tooling** backed by internal endpoints | [`ide/`](../ide) — `sov` CLI + Continue + Cursor + VS Code FIM extension (Copilot alternative) | ✅ working |
-| 8 | **Drive adoption; measure impact** | [`adoption/`](../adoption) — impact report from gateway metrics + acceptance signals; Grafana dashboard | ✅ working |
+| 8 | **Drive adoption; measure impact** | [`adoption/`](../adoption) — impact report from gateway metrics + acceptance signals; Grafana dashboard; the operator [`dashboard/`](../dashboard) Adoption view (usage, acceptance, hours saved, by-surface) | ✅ working |
 | 9 | **Docs & workshops; communicate tradeoffs** | [`docs/`](.) — [architecture](./architecture.md), [ADRs](./adr), [workshop](./workshop.md), [tradeoffs](./tradeoffs.md), this matrix | ✅ working |
-| 10 | **Platform reliability** | Gateway `/healthz` · `/readyz` · Prometheus `/metrics`; [`adoption/grafana-dashboard.json`](../adoption/grafana-dashboard.json) | ✅ working |
+| 10 | **Platform reliability** | Gateway `/healthz` · `/readyz` · Prometheus `/metrics`; [`adoption/grafana-dashboard.json`](../adoption/grafana-dashboard.json); the operator [`dashboard/`](../dashboard) Overview (live health, p50/p95 latency, tokens/sec, backend readiness) | ✅ working |
 | 11 | **Infrastructure as code** (Vultr GPU / VKE / Object Storage) | [`infra/`](../infra) — Terraform + Helm; `make tf-plan` / `helm-lint` (plan-only, $0) | ✅ working (plan) |
 
 ## The sovereignty thesis, in one line

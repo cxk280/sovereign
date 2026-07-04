@@ -71,10 +71,12 @@ OVERVIEW_STATS: list[StatDict] = [
     {"label": "ERROR RATE", "value": "0.4%", "delta": "▼ 0.1%", "tone": "positive"},
 ]
 # requests/min sampled over the last hour (24 x 2.5-min buckets)
+# fmt: off
 OVERVIEW_REQUESTS_SERIES: list[int] = [
     22, 26, 24, 30, 28, 34, 31, 38, 36, 33, 40, 44,
     41, 47, 43, 50, 46, 52, 48, 45, 42, 49, 44, 42,
 ]
+# fmt: on
 OVERVIEW_READINESS: list[ReadinessDict] = [
     {"name": "Gateway", "status": "healthy"},
     {"name": "Qdrant (RAG)", "status": "healthy"},
@@ -139,11 +141,13 @@ ADOPTION_STATS: list[StatDict] = [
     {"label": "EST. HOURS SAVED", "value": "96 h", "delta": "▲ 18 h", "tone": "positive"},
     {"label": "ACTIVE DEVELOPERS", "value": "14", "delta": "▲ 2 this month", "tone": "positive"},
 ]
+# fmt: off
 ADOPTION_USAGE_SERIES: list[int] = [
     380, 420, 410, 300, 290, 460, 510, 480, 520, 505,
     360, 340, 560, 590, 570, 610, 640, 430, 410, 660,
     680, 700, 720, 690, 470, 450, 730, 760, 780, 742,
 ]
+# fmt: on
 ADOPTION_BY_SURFACE: list[SurfaceDict] = [
     {"label": "IDE — Continue / Cursor", "pct": 58, "color": "indigo"},
     {"label": "CI — GitLab pipelines", "pct": 27, "color": "emerald"},
@@ -175,8 +179,7 @@ CONTEXT_RESULTS: list[HitDict] = [
         "title": "ADR-0002 — Postgres as system of record",
         "path": "architecture/ADR-0002-postgres-as-system-of-record.md",
         "snippet": (
-            "Migrations are backward-compatible, so a rollback never strands "
-            "in-flight writes."
+            "Migrations are backward-compatible, so a rollback never strands in-flight writes."
         ),
         "score": 0.71,
     },
