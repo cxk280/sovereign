@@ -20,7 +20,7 @@ verify:
   script:
     - uv run ruff check .
     - uv run ruff format --check .
-    - uv run mypy sovereign gateway rag mcp_servers eval ci
+    - uv run mypy sovereign gateway rag mcp_servers eval ci ide adoption
     - uv run pytest -q
 
 secret-scan:

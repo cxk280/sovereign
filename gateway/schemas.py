@@ -25,3 +25,13 @@ class ChatCompletionRequest(BaseModel):
     # `model` may be a registered model name, a task alias, "auto", or omitted.
     model: str | None = None
     messages: list[ChatMessage]
+
+
+class CompletionRequest(BaseModel):
+    """Legacy/FIM text completion — backs IDE autocomplete (`suffix` = fill-in-middle)."""
+
+    model_config = ConfigDict(extra="allow")
+
+    model: str | None = None
+    prompt: str
+    suffix: str | None = None

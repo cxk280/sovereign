@@ -31,15 +31,19 @@ class OpenAICompatBackend:
     def _headers(self) -> dict[str, str]:
         return {"Authorization": f"Bearer {self._api_key}"} if self._api_key else {}
 
-    async def chat(self, model: str, payload: dict[str, Any]) -> dict[str, Any]:
+    async def _post(self, path: str, model: str, payload: dict[str, Any]) -> dict[str, Any]:
         body = {**payload, "model": model, "stream": False}
         async with httpx.AsyncClient(timeout=self._timeout) as client:
-            resp = await client.post(
-                f"{self._base_url}/v1/chat/completions", json=body, headers=self._headers()
-            )
+            resp = await client.post(f"{self._base_url}{path}", json=body, headers=self._headers())
             resp.raise_for_status()
             data: dict[str, Any] = resp.json()
             return data
+
+    async def chat(self, model: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return await self._post("/v1/chat/completions", model, payload)
+
+    async def completions(self, model: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return await self._post("/v1/completions", model, payload)
 
     async def health(self) -> bool:
         try:
