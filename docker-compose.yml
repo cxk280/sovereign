@@ -29,6 +29,27 @@ services:
       - ollama
       - qdrant
 
+  # Read-only backend for the operator dashboard (build-order Step 5).
+  dashboard-api:
+    build:
+      context: .
+      dockerfile: dashboard_api/Dockerfile
+    ports:
+      - "8090:8090"
+    depends_on:
+      - gateway
+
+  # Operator dashboard SPA — nginx serves the static bundle and proxies /api
+  # to dashboard-api. Open http://localhost:5173.
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - dashboard-api
+
   # Local model backend — the $0 dev path. Pull a model once with:
   #   docker compose exec ollama ollama pull qwen2.5-coder:1.5b
   ollama:

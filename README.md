@@ -112,6 +112,7 @@ Two ways to run the exact same system:
 | RAG over internal knowledge with a local embedding model + vector DB | [`rag/`](./rag) |
 | IDE tooling backed by an internal, OpenAI-compatible endpoint | [`ide/`](./ide) |
 | Adoption & impact measurement | [`adoption/`](./adoption) |
+| Operator dashboard — health, registry, leaderboard, adoption, context | [`dashboard/`](./dashboard) · [`dashboard_api/`](./dashboard_api) |
 | Infrastructure as code — Vultr Cloud GPU, VKE, Object Storage | [`infra/`](./infra) |
 
 ## Quick start (local)
@@ -130,8 +131,8 @@ curl localhost:8080/v1/chat/completions \
 ## Project status
 
 `sovereign` is under active development, built in the open. The gateway, model registry/routing, the
-MCP servers, and the RAG layer over your internal knowledge are in place; model evaluation, GitLab
-integration, the operator dashboard, IDE tooling, and Vultr infrastructure are landing in sequence.
+MCP servers, the RAG layer over your internal knowledge, model evaluation, GitLab integration, IDE
+tooling, and the operator dashboard are in place; Vultr infrastructure is landing in sequence.
 See the component table above — each directory has its own README describing what it does and how it
 fits.
 
