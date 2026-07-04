@@ -10,6 +10,10 @@ and indexed context.
 > near-white canvas, white cards (1.5px slate border, 14px radius), Inter, indigo
 > `#4F46E5` / emerald `#10B981` accents — all in `src/styles/tokens.css`.
 
+![Overview — platform health, request volume, and backend readiness](../docs/assets/dashboard-overview.png)
+
+![Evaluation leaderboard — pass rate per model per task, with the curated winner](../docs/assets/dashboard-leaderboard.png)
+
 ## Views
 
 | Route | View | Renders |
