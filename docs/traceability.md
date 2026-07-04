@@ -35,9 +35,10 @@ Two lines are drawn deliberately, and the docs never blur them:
 - **Architected & costed, not stood up:** the larger multi-GPU, tensor-parallel VKE topology is
   shipped as Helm + Terraform (`vllm.gpus > 1`) and costed in [`infra/cost.md`](../infra/cost.md),
   but not run in the $0 build.
-- **Mock-gated:** the operator **dashboard** (eval leaderboard, registry/routing, live metrics,
-  adoption) is specified in [`VIEWS.md`](../VIEWS.md) and goes through Figma-mock approval before UI
-  code — greenfield UI held behind its design gate by project rule.
+- **Built through the mock gate:** the operator **dashboard** (overview, registry/routing, eval
+  leaderboard, adoption, context) was specified in [`VIEWS.md`](../VIEWS.md), mocked in Figma, and
+  approved before any UI code — then built as [`dashboard/`](../dashboard) (SPA) +
+  [`dashboard_api/`](../dashboard_api) (read-only API), honoring the greenfield-UI design gate.
 
 ## Data hygiene (public repo)
 

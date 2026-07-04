@@ -112,6 +112,7 @@ Two ways to run the exact same system:
 | RAG over internal knowledge with a local embedding model + vector DB | [`rag/`](./rag) |
 | IDE tooling backed by an internal, OpenAI-compatible endpoint | [`ide/`](./ide) |
 | Adoption & impact measurement | [`adoption/`](./adoption) |
+| Operator dashboard — health, registry, leaderboard, adoption, context | [`dashboard/`](./dashboard) · [`dashboard_api/`](./dashboard_api) |
 | Infrastructure as code — Vultr Cloud GPU, VKE, Object Storage | [`infra/`](./infra) |
 
 ## Quick start (local)
@@ -138,13 +139,13 @@ local vs Vultr GPU), a $0 [hands-on workshop](./docs/workshop.md), the
 ## Project status
 
 `sovereign` is built in the open. The gateway and model registry/routing, the MCP servers, the RAG
-layer, model evaluation and lifecycle, the GitLab CI/CD AI jobs, IDE tooling, adoption metrics, and
-the Vultr infrastructure-as-code are all in place — each directory has its own README, and the
-[traceability matrix](./docs/traceability.md) maps every capability to where it's demonstrated. The
-operator dashboard is greenfield UI held behind its design gate ([`VIEWS.md`](./VIEWS.md) → Figma
-mocks → approval). The larger multi-GPU VKE topology is architected and costed but not stood up; the
-single-A16 benchmark numbers are measured on real Vultr hardware — the docs are precise about that
-boundary.
+layer, model evaluation and lifecycle, the GitLab CI/CD AI jobs, IDE tooling, adoption metrics, the
+operator dashboard, and the Vultr infrastructure-as-code are all in place — each directory has its
+own README, and the [traceability matrix](./docs/traceability.md) maps every capability to where it's
+demonstrated. The operator dashboard was built through its design gate ([`VIEWS.md`](./VIEWS.md) →
+Figma mocks → approval). The larger multi-GPU VKE topology is architected and costed but not stood
+up; the single-A16 benchmark numbers are measured on real Vultr hardware — the docs are precise about
+that boundary.
 
 ## A note on data
 
