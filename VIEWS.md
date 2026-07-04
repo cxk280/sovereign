@@ -5,6 +5,9 @@ Verbal description of every view in `sovereign`. The **only** graphical UI is th
 
 > **Design gate:** the dashboard is greenfield UI. These descriptions are finalized here, then mocked
 > in **Figma** and **approved** before any dashboard code is written.
+>
+> **Mocks (v1):** all 5 views — [Figma file](https://www.figma.com/design/W4yVBCLXcDUAXrmU3Uhn91).
+> Status: **awaiting user approval** before any `dashboard/` code is written (built via `/factory`).
 
 ## Design language
 
