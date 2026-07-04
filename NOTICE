@@ -1,11 +1,11 @@
 sovereign
 Copyright (c) 2026 Christopher King
 
-This is an independent, open-source portfolio project. It is NOT affiliated
-with, sponsored by, endorsed by, or otherwise associated with Vultr, The
-Constant Company, LLC, or any of their subsidiaries or affiliates. References
-to "Vultr" describe a deployment target for the infrastructure-as-code in this
-repository and reflect the author's independent design choices only.
+sovereign is an independent, open-source project. It is NOT affiliated with,
+sponsored by, endorsed by, or otherwise associated with Vultr, The Constant
+Company, LLC, or any of their subsidiaries or affiliates. References to "Vultr"
+describe a deployment target for the infrastructure-as-code in this repository
+and reflect the author's independent design choices only.
 
 All company names, service names, source code, runbooks, incident reports, and
 architecture documents under `sample_data/` are FICTITIOUS and synthetic. They
