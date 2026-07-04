@@ -1,0 +1,14 @@
+#cloud-config
+# Make the A16 instance benchmark-ready on boot: install Docker + NVIDIA runtime
+# and serve an AWQ-quantized coder model with vLLM (OpenAI-compatible, :8000).
+package_update: true
+packages:
+  - docker.io
+runcmd:
+  - systemctl enable --now docker
+  - |
+    docker run -d --restart=always --gpus all -p 8000:8000 --name vllm \
+      vllm/vllm-openai:latest \
+      --model Qwen/Qwen2.5-Coder-7B-Instruct-AWQ \
+      --quantization awq \
+      --max-model-len 8192
