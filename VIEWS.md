@@ -7,7 +7,7 @@ Verbal description of every view in `sovereign`. The **only** graphical UI is th
 > in **Figma** and **approved** before any dashboard code is written.
 >
 > **Mocks (v1):** all 5 views — [Figma file](https://www.figma.com/design/W4yVBCLXcDUAXrmU3Uhn91).
-> Status: **awaiting user approval** before any `dashboard/` code is written (built via `/factory`).
+> Status: **APPROVED** (user, 2026-07-04). `dashboard/` is built from these mocks via `/factory`.
 
 ## Design language
 
