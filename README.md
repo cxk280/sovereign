@@ -129,10 +129,11 @@ curl localhost:8080/v1/chat/completions \
 
 ## Project status
 
-`sovereign` is under active development, built in the open. The gateway, model registry/routing, and
-the synthetic knowledge corpus are in place; the MCP/RAG layer, model evaluation, GitLab integration,
-operator dashboard, IDE tooling, and Vultr infrastructure are landing in sequence. See the component
-table above — each directory has its own README describing what it does and how it fits.
+`sovereign` is under active development, built in the open. The gateway, model registry/routing, the
+MCP servers, and the RAG layer over your internal knowledge are in place; model evaluation, GitLab
+integration, the operator dashboard, IDE tooling, and Vultr infrastructure are landing in sequence.
+See the component table above — each directory has its own README describing what it does and how it
+fits.
 
 ## A note on data
 
