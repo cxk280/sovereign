@@ -21,7 +21,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["sovereign", "gateway"]
+packages = ["sovereign", "gateway", "rag", "mcp_servers"]
 
 [tool.ruff]
 line-length = 100
