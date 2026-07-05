@@ -261,6 +261,10 @@ body {
 /* --- States ---------------------------------------------------------------- */
 .state { padding: 40px; color: var(--text-muted); font-size: 14px; }
 .state.error { color: var(--red); }
+.notfound { padding: 56px 4px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.notfound-code { font-size: 72px; font-weight: 700; color: var(--indigo); line-height: 1; }
+.btn-link { color: var(--indigo); font-weight: 500; font-size: 14px; text-decoration: none; margin-top: 14px; }
+.btn-link:hover { text-decoration: underline; }
 
 /* --- Mobile / narrow: the fixed side rail becomes a top bar ----------------- */
 /* Below this width a 240px left rail would eat a phone screen, so the shell

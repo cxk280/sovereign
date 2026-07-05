@@ -21,7 +21,7 @@ export function Sidebar() {
         <NavLink
           key={item.to}
           to={item.to}
-          end={item.to === '/'}
+          end
           className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
         >
           <Icon name={item.icon} />

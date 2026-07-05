@@ -137,3 +137,27 @@ Goal: glance at the dashboard on a phone (390px portrait). | Outcome: pass 1 **b
 - **Status:** fixed
 
 _Landscape (844px) already worked; the fixes make portrait usable too._
+
+---
+
+## Persona 20 — "Guy Fieri Jr.", URL tinkerer (dumb-user)
+Goal: type random/unknown URLs and get sane results. | Outcome: pass 1 **issues** → **fixed**
+
+### Finding 20.1 — No 404 page; unknown routes silently render Overview  [severity: major]
+- **Pass:** 1 | **Where:** `/admin`, `/login`, `/settings`, `/registryyy`, etc.
+- **Expected vs actual:** A wrong URL quietly showed the Overview dashboard (HTTP 200, no nav highlighted, no signal) — a confused user gets no indication the route doesn't exist.
+- **Remediation:** Fixed — added `dashboard/src/views/NotFound.tsx` (a styled 404 with a "Back to Overview" link) and pointed the `*` route at it (`App.tsx`). Verified: `/admin`, `/registryyy` → "404 · Page not found".
+- **Status:** fixed
+
+### Finding 20.2 — `/context/extra/deep` showed 404 content but kept "Context" highlighted  [severity: minor]
+- **Pass:** 1 | **Where:** deep unknown path under a real prefix.
+- **Expected vs actual:** Nav lied — the `/context` link matched the prefix and stayed active while the content was the fallback.
+- **Remediation:** Fixed — every sidebar `NavLink` now uses `end` (exact match), so a deep unknown path activates no nav item. Verified: `/context/extra/deep` → 404, no active nav; `/context` still activates correctly.
+- **Status:** fixed
+
+### Finding 20.3 — `/api/overview` shows raw JSON; `/robots.txt` falls to the SPA  [severity: nitpick]
+- **Pass:** 1 | **Where:** non-SPA paths.
+- **Remediation:** Declined — `/api/*` returning JSON is correct (it's the API; in prod nginx proxies it), and a missing `robots.txt` on an internal, unindexed operator tool is immaterial. Not product-facing defects.
+- **Status:** declined
+
+_`/Leaderboard` (wrong case) correctly rendered Leaderboard — React Router matches case-insensitively; expected._
