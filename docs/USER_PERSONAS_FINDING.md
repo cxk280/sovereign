@@ -3,7 +3,27 @@
 App under test: the **sovereign operator dashboard** (`http://localhost:5173`, Vite dev
 server + `dashboard_api` backend). Date: 2026-07-04. Read-only observability SPA, 5 views.
 
-Pass 1 in progress. Personas driven one at a time in a real browser (Playwright/Chromium).
+Two passes run. Personas driven one at a time in a real browser (Playwright/Chromium);
+the main thread remediated between passes.
+
+## Summary
+
+Pass 1 (7 personas across functional, keyboard-a11y, colorblind, low-vision/zoom, mobile,
+unknown-routes, jargon) surfaced **11 real issues** — all remediated in this branch:
+
+| Area | Fixes |
+|---|---|
+| Accessibility | Context box → real read-only `<input>` (17.1); colorblind-safe chart textures + `<title>` tooltips (18.1); `--text-muted` → WCAG-AA (13.5) |
+| Responsive | `.row` wrap + `.side-card`, stat-row auto-fit grid, tables scroll-in-card, chart min-width+scroll (13.1–13.4) |
+| Mobile (≤720px) | sidebar → top nav bar, topbar wraps, content full-width, BarChart never blanks (14.1–14.5) |
+| Routing | real 404 view + exact-match nav (20.1–20.2) |
+
+Declined with rationale: dev-server nitpicks (20.3), non-technical jargon on an
+engineer-facing console (16.1), by-design read-only focus behavior (17.2).
+
+**Pass 2** (a skeptical QA re-sweep at 390/700/1440px): **7/7 fixes PASS, no regressions,
+zero console errors.** Stopped per the skill — a full pass yielded no new complaints. One
+pre-existing low nitpick noted (§Pass 2).
 
 ---
 
@@ -161,3 +181,30 @@ Goal: type random/unknown URLs and get sane results. | Outcome: pass 1 **issues*
 - **Status:** declined
 
 _`/Leaderboard` (wrong case) correctly rendered Leaderboard — React Router matches case-insensitively; expected._
+
+---
+
+## Persona 16 — "Pop-pop Ray", non-technical visitor (dumb-user)
+Goal: understand what the tool is without knowing jargon. | Outcome: **blocked** (by design — wrong audience)
+
+### Finding 16.1 — Pervasive engineering jargon (p95, quant, Q4_K_M, tokens/sec, MCP, RAG, vLLM, IDE/CI/CLI)  [severity: major-for-him / nitpick-for-audience]
+- **Pass:** 1 | **Where:** all views — stat labels, Backend box, Context subtitle, leaderboard notes.
+- **Expected vs actual:** A non-technical reader can't decode the terms; there's no plain-language glossary/tooltips.
+- **Remediation:** **Declined.** The operator dashboard is explicitly a **platform-engineer-facing observability console** (`VIEWS.md`: single technical operator), not a consumer product — SRE/AI-platform terms (p95, quantization, MCP, RAG, tokens/sec) are the correct register for the audience and dumbing them down would reduce precision. Abbreviations that can be expanded cheaply already are (e.g. Adoption's "IDE — Continue / Cursor", "CI — GitLab pipelines", "CLI — sov"). Noted as a deliberate audience decision, not a defect.
+- **Status:** declined
+- **Valid signal kept:** Ray found the **Adoption** view most legible ("hours saved", "active developers") and status states (green "healthy", "All systems operational") readable without jargon — confirms the human-outcome framing there lands. No change needed.
+
+---
+
+## Pass 2 — verification sweep (skeptical QA, real browser)
+Re-checked every remediation at 390 / 700 / 1440px and swept for regressions.
+
+- **7/7 fixes PASS** with evidence: read-only Context input + focus ring; colorblind textures (solid/hatch/dots) on bars + legend + `<title>` tooltips; 404 page + no active nav on unknown routes; exact-match nav on real routes; mobile top-bar + zero page overflow + Adoption chart renders; 720px reflow (tiles wrap, cards stack, tables scroll-in-card); muted text 4.76:1 (AA).
+- **No regressions** introduced by the texture overlays or table-scroll wrappers.
+- **Zero console/page errors** across all viewports; desktop (1440px) sweep of all 5 views clean.
+
+### Pass-2 nitpick (pre-existing, not fixed) — table horizontal-scroll affordance  [severity: nitpick]
+- **Where:** Leaderboard/Registry tables when narrow enough to scroll inside their card.
+- **Note:** No explicit scrollbar/gradient hint that the table region scrolls; inherent to the "scroll inside card" pattern and present before this round.
+- **Remediation:** Declined for this pass — cosmetic polish (a scroll-edge shadow) with low impact on an operator tool; recorded for a future enhancement.
+- **Status:** open (accepted)
