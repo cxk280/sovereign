@@ -30,7 +30,11 @@ from dashboard_api.schemas import (
 from gateway.registry import Registry
 
 
-def create_app(registry: Registry, sample_data: Path = data.DEFAULT_SAMPLE_DATA) -> FastAPI:
+def create_app(
+    registry: Registry,
+    sample_data: Path = data.DEFAULT_SAMPLE_DATA,
+    results_dir: Path | None = None,
+) -> FastAPI:
     from sovereign import __version__
 
     app = FastAPI(title="sovereign-dashboard-api", version=__version__)
@@ -48,7 +52,7 @@ def create_app(registry: Registry, sample_data: Path = data.DEFAULT_SAMPLE_DATA)
 
     @app.get("/api/overview")
     async def overview() -> OverviewPayload:
-        return data.build_overview(registry)
+        return data.build_overview(registry, results_dir)
 
     @app.get("/api/registry")
     async def registry_view() -> RegistryPayload:
@@ -56,7 +60,7 @@ def create_app(registry: Registry, sample_data: Path = data.DEFAULT_SAMPLE_DATA)
 
     @app.get("/api/leaderboard")
     async def leaderboard() -> LeaderboardPayload:
-        return data.build_leaderboard()
+        return data.build_leaderboard(results_dir)
 
     @app.get("/api/adoption")
     async def adoption() -> AdoptionPayload:

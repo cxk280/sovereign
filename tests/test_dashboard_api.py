@@ -1,5 +1,6 @@
 """Dashboard backend tests — real registry + sample_data, zero network."""
 
+import json
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -9,6 +10,8 @@ from dashboard_api.data import build_leaderboard
 from gateway.registry import ModelSpec, Registry, RoutingConfig
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+
+_MEASURED_MODEL = "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ"
 
 
 def _registry() -> Registry:
@@ -105,3 +108,88 @@ def test_context_handles_missing_sample_data(tmp_path: Path) -> None:
         "Architecture",
     }
     assert all(s["docs_label"].startswith("0 ") for s in body["sources"])
+
+
+# --- measured eval results (eval/results/) ----------------------------------
+def _client_with_results(tmp_path: Path) -> TestClient:
+    return TestClient(
+        create_app(_registry(), sample_data=REPO_ROOT / "sample_data", results_dir=tmp_path)
+    )
+
+
+def test_overview_uses_measured_bench_when_present(tmp_path: Path) -> None:
+    (tmp_path / "bench.json").write_text(
+        json.dumps(
+            [{"model": _MEASURED_MODEL, "requests": 8, "avg_latency_s": 1.84, "tokens_per_s": 74.2}]
+        )
+    )
+    body = _client_with_results(tmp_path).get("/api/overview").json()
+    tiles = {s["label"]: s for s in body["stats"]}
+    assert tiles["TOKENS / SEC"]["value"] == "74"
+    assert tiles["TOKENS / SEC"]["delta"] == "measured"
+    # the P50 tile is relabelled to the honestly-named measured average
+    assert "AVG LATENCY" in tiles
+    assert tiles["AVG LATENCY"]["value"] == "1.84 s"
+    assert tiles["AVG LATENCY"]["delta"] == "measured"
+    assert "measured" in body["backend"]["note"].lower()
+
+
+def test_overview_falls_back_to_fixtures_when_results_absent(tmp_path: Path) -> None:
+    body = _client_with_results(tmp_path).get("/api/overview").json()  # empty dir
+    tiles = {s["label"]: s for s in body["stats"]}
+    assert tiles["P50 LATENCY"]["value"] == "310 ms"  # fixture value, unchanged
+    assert "AVG LATENCY" not in tiles
+
+
+def test_overview_survives_malformed_bench_json(tmp_path: Path) -> None:
+    (tmp_path / "bench.json").write_text("{ this is not valid json")
+    body = _client_with_results(tmp_path).get("/api/overview").json()  # no 500
+    tiles = {s["label"]: s for s in body["stats"]}
+    assert tiles["P50 LATENCY"]["value"] == "310 ms"  # graceful fixture fallback
+
+
+def test_leaderboard_overlays_measured_rows(tmp_path: Path) -> None:
+    (tmp_path / "leaderboard.json").write_text(
+        json.dumps(
+            {
+                _MEASURED_MODEL: {
+                    "code-gen": 0.9,
+                    "code-review": 0.8,
+                    "test-gen": 0.7,
+                    "overall": 0.8,
+                }
+            }
+        )
+    )
+    body = _client_with_results(tmp_path).get("/api/leaderboard").json()
+    measured = [r for r in body["rows"] if r["measured"]]
+    assert len(measured) == 1
+    row = measured[0]
+    assert row["name"] == _MEASURED_MODEL
+    assert row["scores"] == {"code-gen": 0.9, "code-review": 0.8, "test-gen": 0.7}
+    assert row["overall"] == 0.8
+    # illustrative fixture candidates remain as comparison context
+    assert any(not r["measured"] for r in body["rows"])
+
+
+def test_leaderboard_all_fixtures_when_results_absent(tmp_path: Path) -> None:
+    body = _client_with_results(tmp_path).get("/api/leaderboard").json()
+    assert all(r["measured"] is False for r in body["rows"])
+
+
+def test_overview_empty_bench_list_falls_back_to_fixtures(tmp_path: Path) -> None:
+    (tmp_path / "bench.json").write_text("[]")  # present but no rows
+    body = _client_with_results(tmp_path).get("/api/overview").json()
+    tiles = {s["label"]: s for s in body["stats"]}
+    assert tiles["P50 LATENCY"]["value"] == "310 ms"  # unchanged fixture
+
+
+def test_overview_sub_second_latency_formats_as_ms(tmp_path: Path) -> None:
+    (tmp_path / "bench.json").write_text(
+        json.dumps(
+            [{"model": _MEASURED_MODEL, "requests": 8, "avg_latency_s": 0.42, "tokens_per_s": 88.0}]
+        )
+    )
+    body = _client_with_results(tmp_path).get("/api/overview").json()
+    tiles = {s["label"]: s for s in body["stats"]}
+    assert tiles["AVG LATENCY"]["value"] == "420 ms"  # GPU-speed latency reads in ms

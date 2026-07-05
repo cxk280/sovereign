@@ -10,6 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from dashboard_api import fixtures as fx
+from dashboard_api.results import BenchMeasurement, load_eval_results
 from dashboard_api.schemas import (
     AdoptionPayload,
     BackendPanel,
@@ -40,16 +41,43 @@ def _backend_label(backend: str) -> str:
     return {"ollama": _LOCAL_BACKEND_LABEL, "vllm": "vLLM · Vultr A16"}.get(backend, backend)
 
 
-def build_overview(registry: Registry) -> OverviewPayload:
+def _fmt_latency(seconds: float) -> str:
+    return f"{seconds * 1000:.0f} ms" if seconds < 1 else f"{seconds:.2f} s"
+
+
+def _apply_measured_perf(stats: list[Stat], m: BenchMeasurement) -> None:
+    """Override the latency + tokens/sec tiles in place with measured values."""
+    for s in stats:
+        if s.label == "TOKENS / SEC":
+            s.value = f"{m.tokens_per_s:.0f}"
+            s.delta, s.tone = "measured", "neutral"
+        elif s.label == "P50 LATENCY":
+            s.label = "AVG LATENCY"  # bench.json measures average request latency, not p50
+            s.value = _fmt_latency(m.avg_latency_s)
+            s.delta, s.tone = "measured", "neutral"
+
+
+def build_overview(registry: Registry, results_dir: Path | None = None) -> OverviewPayload:
     stats = [Stat(**s) for s in fx.OVERVIEW_STATS]
     stats[0].value = str(len(registry.models))  # models-live is real
     active = registry.models[0] if registry.models else None
+
+    note = "vLLM · Vultr A16 available for benchmark runs"
+    results = load_eval_results(results_dir)
+    if results.has_bench:
+        _apply_measured_perf(stats, results.bench[0])
+        note = (
+            "Latency & tokens/sec measured on Vultr A16"
+            if active and active.backend == "vllm"
+            else "Latency & tokens/sec measured from a real eval run"
+        )
+
     backend = BackendPanel(
         serving=_backend_label(active.backend) if active else _LOCAL_BACKEND_LABEL,
         model=active.name if active else "—",
         quant=(active.quantization or "—") if active else "—",
         readiness=[Readiness(**r) for r in fx.OVERVIEW_READINESS],
-        note="vLLM · Vultr A16 available for benchmark runs",
+        note=note,
     )
     return OverviewPayload(
         stats=stats,
@@ -88,7 +116,27 @@ def _route_backend(registry: Registry, model: str) -> str:
     return spec.backend if spec else "ollama"
 
 
-def build_leaderboard() -> LeaderboardPayload:
+def _merge_measured_leaderboard(
+    rows: list[LeaderboardRow], tasks: list[str], measured: dict[str, dict[str, float]]
+) -> list[LeaderboardRow]:
+    """Overlay measured rows: replace a fixture row of the same model, else append."""
+    by_name = {r.name: r for r in rows}
+    for model, scores in measured.items():
+        task_scores = {t: float(scores.get(t, 0.0)) for t in tasks}
+        overall = scores.get("overall")
+        if overall is None:
+            overall = sum(task_scores.values()) / len(tasks) if tasks else 0.0
+        by_name[model] = LeaderboardRow(
+            name=model,
+            scores=task_scores,
+            overall=round(float(overall), 4),
+            curated=by_name[model].curated if model in by_name else False,
+            measured=True,
+        )
+    return list(by_name.values())
+
+
+def build_leaderboard(results_dir: Path | None = None) -> LeaderboardPayload:
     tasks = fx.LEADERBOARD_TASKS
     rows = []
     for entry in fx.LEADERBOARD:
@@ -102,8 +150,15 @@ def build_leaderboard() -> LeaderboardPayload:
                 curated=entry["curated"],
             )
         )
+
+    note = fx.LEADERBOARD_NOTE
+    results = load_eval_results(results_dir)
+    if results.has_leaderboard:
+        rows = _merge_measured_leaderboard(rows, tasks, results.leaderboard)
+        note = f"{fx.LEADERBOARD_NOTE} Rows marked measured come from a real eval run."
+
     rows.sort(key=lambda r: r.overall, reverse=True)
-    return LeaderboardPayload(tasks=tasks, rows=rows, note=fx.LEADERBOARD_NOTE)
+    return LeaderboardPayload(tasks=tasks, rows=rows, note=note)
 
 
 def build_adoption() -> AdoptionPayload:

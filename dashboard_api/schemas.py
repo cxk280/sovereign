@@ -62,6 +62,7 @@ class LeaderboardRow(BaseModel):
     scores: dict[str, float]  # task -> pass rate (0..1)
     overall: float
     curated: bool = False
+    measured: bool = False  # True when scores come from a real eval run (not fixtures)
 
 
 class LeaderboardPayload(BaseModel):
