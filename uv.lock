@@ -2506,6 +2506,14 @@ version = "0.0.0"
 source = { editable = "." }
 
 [package.optional-dependencies]
+dashboard = [
+    { name = "fastapi" },
+    { name = "httpx" },
+    { name = "prometheus-client" },
+    { name = "pydantic" },
+    { name = "pyyaml" },
+    { name = "uvicorn" },
+]
 dev = [
     { name = "mypy" },
     { name = "pytest" },
@@ -2535,24 +2543,30 @@ rag = [
 
 [package.metadata]
 requires-dist = [
+    { name = "fastapi", marker = "extra == 'dashboard'", specifier = ">=0.115" },
     { name = "fastapi", marker = "extra == 'gateway'", specifier = ">=0.115" },
+    { name = "httpx", marker = "extra == 'dashboard'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'eval'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'gateway'", specifier = ">=0.27" },
     { name = "matplotlib", marker = "extra == 'eval'", specifier = ">=3.9" },
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.1" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.13" },
+    { name = "prometheus-client", marker = "extra == 'dashboard'", specifier = ">=0.21" },
     { name = "prometheus-client", marker = "extra == 'gateway'", specifier = ">=0.21" },
+    { name = "pydantic", marker = "extra == 'dashboard'", specifier = ">=2.9" },
     { name = "pydantic", marker = "extra == 'gateway'", specifier = ">=2.9" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.24" },
+    { name = "pyyaml", marker = "extra == 'dashboard'", specifier = ">=6.0" },
     { name = "pyyaml", marker = "extra == 'eval'", specifier = ">=6.0" },
     { name = "pyyaml", marker = "extra == 'gateway'", specifier = ">=6.0" },
     { name = "qdrant-client", marker = "extra == 'rag'", specifier = ">=1.12" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8" },
     { name = "sentence-transformers", marker = "extra == 'rag'", specifier = ">=3.3" },
+    { name = "uvicorn", marker = "extra == 'dashboard'", specifier = ">=0.32" },
     { name = "uvicorn", marker = "extra == 'gateway'", specifier = ">=0.32" },
 ]
-provides-extras = ["gateway", "rag", "mcp", "eval", "dev"]
+provides-extras = ["gateway", "rag", "mcp", "eval", "dashboard", "dev"]
 
 [[package]]
 name = "sse-starlette"

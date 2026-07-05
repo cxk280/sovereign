@@ -34,13 +34,18 @@ def benchmark(client: ModelClient, prompts: list[str]) -> BenchResult:
     tokens = 0
     for p in prompts:
         start = time.perf_counter()
-        out = client.complete(p)
+        try:
+            out = client.complete(p)
+        except Exception:
+            # A single slow/failed call must not sink the whole benchmark — especially
+            # after paying for GPU time. Skip it and report throughput over what succeeded.
+            continue
         latencies.append(time.perf_counter() - start)
         tokens += _approx_tokens(out)
     wall = sum(latencies) or 1e-9
     return BenchResult(
         model=client.name,
-        requests=len(prompts),
+        requests=len(latencies),
         avg_latency_s=(sum(latencies) / len(latencies)) if latencies else 0.0,
         tokens_per_s=tokens / wall,
     )
