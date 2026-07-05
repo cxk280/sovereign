@@ -7,10 +7,15 @@ set -euo pipefail
 cd "$(dirname "$0")/../terraform"
 
 cleanup() {
-  echo "==> destroying benchmark instance"
-  terraform destroy -target=vultr_instance.gpu_bench -target=vultr_firewall_group.sovereign -auto-approve
+  echo "==> destroying ALL benchmark resources (instance + firewall)"
+  terraform destroy \
+    -target=vultr_instance.gpu_bench \
+    -target=vultr_firewall_rule.gateway \
+    -target=vultr_firewall_rule.ssh \
+    -target=vultr_firewall_group.sovereign \
+    -auto-approve
 }
-trap cleanup EXIT
+trap cleanup EXIT INT TERM
 
 terraform init -input=false
 terraform apply \
@@ -22,14 +27,27 @@ terraform apply \
 
 IP="$(terraform output -raw gpu_bench_ip)"
 BASE="http://${IP}:8000"
-echo "==> waiting for vLLM at ${BASE} (model download can take several minutes)"
-until curl -sf "${BASE}/v1/models" >/dev/null; do sleep 15; done
+
+# Bounded wait: if vLLM isn't serving within READY_TIMEOUT, abort so the trap
+# destroys the instance instead of billing forever on a stuck boot/download.
+READY_TIMEOUT="${READY_TIMEOUT:-1800}"  # 30 min default
+echo "==> waiting for vLLM at ${BASE} (model download can take several minutes; timeout ${READY_TIMEOUT}s)"
+deadline=$(( $(date +%s) + READY_TIMEOUT ))
+until curl -sf "${BASE}/v1/models" >/dev/null; do
+  if [ "$(date +%s)" -ge "$deadline" ]; then
+    echo "!! vLLM not ready within ${READY_TIMEOUT}s — aborting; cleanup will destroy the instance" >&2
+    exit 1
+  fi
+  sleep 15
+done
+echo "==> vLLM is serving"
 
 echo "==> running eval + benchmark against the real A16"
 cd ../..
 SOVEREIGN_GATEWAY_URL="${BASE}" uv run python -m eval \
   --models "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ" \
   --gateway "${BASE}" \
-  --out eval/results
+  --out eval/results \
+  --bench
 
 echo "==> done; results in eval/results/ (cleanup runs on exit)"

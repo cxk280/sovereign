@@ -25,7 +25,12 @@ class Result:
 
 def _timed(client: ModelClient, prompt: str) -> tuple[str, float]:
     start = time.perf_counter()
-    out = client.complete(prompt)
+    try:
+        out = client.complete(prompt)
+    except Exception:
+        # A single failed/timed-out call scores as a miss instead of crashing the
+        # whole suite — one flaky request must not throw away a paid benchmark run.
+        out = ""
     return out, time.perf_counter() - start
 
 
