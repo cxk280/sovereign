@@ -57,8 +57,10 @@ export function BarChart({ values, height = 200 }: { values: number[]; height?: 
   const [ref, w] = useWidth();
   const max = Math.max(...values) * 1.05;
   const n = values.length;
-  const gap = 6;
-  const bw = (w - gap * (n - 1)) / n;
+  // Shrink the gap (and clamp bar width ≥1) so a narrow container never yields a
+  // negative bar width — which would render the chart blank.
+  const gap = Math.max(1, Math.min(6, w / n / 4));
+  const bw = Math.max(1, (w - gap * (n - 1)) / n);
   return (
     <div ref={ref} style={{ width: '100%' }}>
       {w > 0 && (
@@ -88,13 +90,43 @@ export interface Group {
   values: number[];
 }
 
+// A second, colour-independent channel so the series are distinguishable without
+// relying on hue (colour-blind safe): series cycle solid → diagonal hatch → dots.
+function overlayId(j: number): string | null {
+  const kind = j % 3;
+  return kind === 1 ? 'cbHatch' : kind === 2 ? 'cbDots' : null;
+}
+
+/** A 14px legend swatch carrying both the series colour AND its texture. */
+function Swatch({ color, index }: { color: string; index: number }) {
+  const kind = index % 3;
+  const uid = `sw${index}`;
+  return (
+    <svg width="14" height="14" style={{ borderRadius: 3, flexShrink: 0 }} aria-hidden="true">
+      <defs>
+        <pattern id={`${uid}h`} patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="6" stroke="#fff" strokeWidth={2} opacity={0.5} />
+        </pattern>
+        <pattern id={`${uid}d`} patternUnits="userSpaceOnUse" width="6" height="6">
+          <circle cx="3" cy="3" r={1.2} fill="#fff" opacity={0.55} />
+        </pattern>
+      </defs>
+      <rect width="14" height="14" rx="3" fill={color} />
+      {kind === 1 && <rect width="14" height="14" rx="3" fill={`url(#${uid}h)`} />}
+      {kind === 2 && <rect width="14" height="14" rx="3" fill={`url(#${uid}d)`} />}
+    </svg>
+  );
+}
+
 export function GroupedBarChart({
   groups,
   colors,
+  seriesLabels,
   height = 300,
 }: {
   groups: Group[];
   colors: string[];
+  seriesLabels?: string[];
   height?: number;
 }) {
   const [ref, w] = useWidth();
@@ -107,9 +139,27 @@ export function GroupedBarChart({
   const barW = Math.min(32, (gw - 16) / series);
   const inner = barW * series + 6 * (series - 1);
   return (
-    <div ref={ref} style={{ width: '100%' }}>
+    <div ref={ref} style={{ width: '100%', minWidth: 600 }}>
+      {seriesLabels && (
+        <div className="legend" style={{ marginBottom: 10 }}>
+          {seriesLabels.map((lab, j) => (
+            <span className="legend-item" key={lab}>
+              <Swatch color={colors[j]} index={j} />
+              {lab}
+            </span>
+          ))}
+        </div>
+      )}
       {w > 0 && (
         <svg width={w} height={height} role="img" aria-label="Pass rate by task">
+          <defs>
+            <pattern id="cbHatch" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="7" stroke="#fff" strokeWidth={2.5} opacity={0.5} />
+            </pattern>
+            <pattern id="cbDots" patternUnits="userSpaceOnUse" width="7" height="7">
+              <circle cx="3.5" cy="3.5" r={1.4} fill="#fff" opacity={0.55} />
+            </pattern>
+          </defs>
           {[0, 1, 2, 3, 4].map((t) => {
             const yy = plotH - (t / 4) * plotH;
             return (
@@ -129,9 +179,13 @@ export function GroupedBarChart({
                   const bh = val * plotH;
                   const x = gx + j * (barW + 6);
                   const y = plotH - bh;
+                  const overlay = overlayId(j);
+                  const label = seriesLabels?.[j] ?? `series ${j + 1}`;
                   return (
                     <g key={j}>
+                      <title>{`${label}: ${val.toFixed(2)}`}</title>
                       <rect x={x} y={y} width={barW} height={bh} rx={3} fill={colors[j]} />
+                      {overlay && <rect x={x} y={y} width={barW} height={bh} rx={3} fill={`url(#${overlay})`} />}
                       <text
                         x={x + barW / 2}
                         y={y - 6}

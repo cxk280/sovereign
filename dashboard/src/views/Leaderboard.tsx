@@ -23,28 +23,20 @@ export function Leaderboard() {
               Vultr A16.
             </p>
           </div>
-          <Card
-            title="Pass rate by task"
-            headExtra={
-              <div className="legend" style={{ marginLeft: 'auto' }}>
-                {data.tasks.map((t, i) => (
-                  <span key={t} className="legend-item">
-                    <span className="legend-dot" style={{ background: TASK_COLORS[i] }} />
-                    {t}
-                  </span>
-                ))}
-              </div>
-            }
-          >
-            <GroupedBarChart
-              colors={TASK_COLORS}
-              groups={data.rows.map((r) => ({
-                label: r.name,
-                values: data.tasks.map((t) => r.scores[t]),
-              }))}
-            />
+          <Card title="Pass rate by task">
+            <div className="chart-scroll">
+              <GroupedBarChart
+                colors={TASK_COLORS}
+                seriesLabels={data.tasks}
+                groups={data.rows.map((r) => ({
+                  label: r.name,
+                  values: data.tasks.map((t) => r.scores[t]),
+                }))}
+              />
+            </div>
           </Card>
           <Card>
+            <div className="table-wrap">
             <table className="table">
               <thead>
                 <tr>
@@ -73,6 +65,7 @@ export function Leaderboard() {
                 ))}
               </tbody>
             </table>
+            </div>
           </Card>
           {data.note && <p className="muted-note">{data.note}</p>}
         </>
