@@ -37,8 +37,8 @@ Goal: reach all 5 views using only the keyboard. | Outcome: **achieved**
 - **Where:** `/context` → "Retrieval preview" panel, the rounded search box + magnifier + query text.
 - **Expected vs actual:** It looks exactly like an editable search field (and the blue paths look like links); actual — it's a static `<div>`, not reachable by Tab, not typeable. A keyboard-only user assumes their keyboard is broken; everyone else is tempted to type.
 - **Repro:** 1) Go to `/context`. 2) Tab through — focus skips the whole retrieval panel and loops back to the nav. 3) The box invites typing but nothing happens.
-- **Remediation:** _pending — make it an honest, focusable read-only affordance (real `<input readonly>` with the sample query)._
-- **Status:** open
+- **Remediation:** Fixed in `dashboard/src/views/Context.tsx` + `app.css` — the query is now a real `<input readOnly>` (keyboard-focusable, announced read-only, `aria-label`), with a `:focus-within` ring on the box, and a new caption ("A sample query … illustrative, read-only preview (not a live search in this build)") that sets expectations. Hint changed to "example · top N".
+- **Status:** fixed
 
 ### Finding 17.2 — Focus disappears after the last sidebar item  [severity: nitpick]
 - **Pass:** 1
@@ -48,3 +48,92 @@ Goal: reach all 5 views using only the keyboard. | Outcome: **achieved**
 - **Status:** declined
 
 _Positives: clear focus ring on all 5 nav links, sensible tab order, Enter activates links correctly._
+
+---
+
+## Persona 18 — Dylan Reeves, colorblind / deuteranopia (dumb-user)
+Goal: tell good/bad and distinguish chart series without relying on color. | Outcome: **achieved**
+
+### Finding 18.1 — Leaderboard chart series distinguishable by color hue only  [severity: major]
+- **Pass:** 1
+- **Where:** `/leaderboard` "Pass rate by task" chart + legend.
+- **Expected vs actual:** Legend was three dots differing only by hue; emerald (code-review) and amber (test-gen) bars read as the same brown to a deuteranope, with no tooltip and no per-bar series label. Info was recoverable only from the table below, not the chart.
+- **Repro:** 1) `/leaderboard`. 2) Ignore the table. 3) Try to name which colored bar is "test-gen" from the chart alone.
+- **Remediation:** Fixed in `dashboard/src/components/charts.tsx` + `Leaderboard.tsx` — added a **texture channel**: series cycle solid → diagonal-hatch → dots, applied to both the bars and the legend swatches, so the three series are distinguishable without color. Also added per-bar `<title>` tooltips ("code-review: 0.78") for hover/AT. Verified visually.
+- **Status:** fixed
+
+### Finding 18.2 — Stat-tile trend arrows need domain knowledge to read as good/bad  [severity: nitpick]
+- **Pass:** 1 | **Where:** `/` stat tiles.
+- **Note:** Uses ▲/▼ glyphs (shape, not color-only) so direction is always readable; whether "up" is good depends on the metric. Not color-only.
+- **Remediation:** Declined — direction is shape-encoded; metric semantics are conventional (latency down = good). Not a color-accessibility defect.
+- **Status:** declined
+
+### Finding 18.3 — Could not observe a degraded/down state (static healthy data)  [severity: nitpick]
+- **Pass:** 1 | **Where:** `/` READINESS rows.
+- **Note:** Readiness renders the status word (`{status}`) as text, so a non-healthy state stays colorblind-safe by text; the demo data is always "healthy" so it couldn't be exercised.
+- **Remediation:** Declined — status is text-rendered (not color-only); coverage gap of the static dataset, not a defect.
+- **Status:** declined
+
+_Positives: Overview health pill, READINESS words, ▲/▼ deltas, Registry active/candidate text pills, and Adoption by-surface text+% labels are all colorblind-safe._
+
+---
+
+## Persona 13 — Mrs. Alvarez, low-vision user at ~200% zoom (dumb-user)
+Goal: read all 5 views comfortably at high zoom / narrow width. | Outcome: pass 1 **partially blocked** → **fixed**
+
+### Finding 13.1 — Context retrieval panel collapses to a sliver; page grows to ~7500px  [severity: blocker]
+- **Pass:** 1 | **Where:** `/context` at ≤720px — the two cards sat side-by-side; the "Retrieval preview" card squeezed to ~2–90px and file paths wrapped one character per line.
+- **Remediation:** Fixed — `.row` now `flex-wrap: wrap` and side cards use `.side-card` (`flex: 1 1 300px`), so cards **stack** on narrow screens; `.result-path` uses `overflow-wrap: anywhere`. Verified: page height 1117px (was 3762–7524), no 1-char wrapping.
+- **Status:** fixed
+
+### Finding 13.2 — Overview/Adoption stat tiles crush & clip values; second card squeezed  [severity: blocker]
+- **Pass:** 1 | **Where:** `/` and `/adoption` — 6-tile flex row refused to wrap ("680 ms" → "68C", "ERROR RATE" clipped); the chart card next to Backend/By-surface collapsed to a sliver.
+- **Remediation:** Fixed — `.stat-row` is now `grid` with `repeat(auto-fit, minmax(150px, 1fr))` (tiles wrap to 2/3 columns), and the chart/side cards stack via the `.row` wrap. Verified: no page overflow at 720px, all values fully visible.
+- **Status:** fixed
+
+### Finding 13.3 — Leaderboard x-axis model labels overlap when narrow  [severity: minor/bug]
+- **Pass:** 1 | **Where:** `/leaderboard` chart x-axis (~31px text overlap between model names).
+- **Remediation:** Fixed — the chart has a `min-width: 600px` inside a `.chart-scroll` (`overflow-x: auto`) container, so on narrow screens it scrolls horizontally instead of colliding labels; desktop is unchanged.
+- **Status:** fixed
+
+### Finding 13.4 — Registry model names wrap mid-syllable + slight table overflow  [severity: minor]
+- **Pass:** 1 | **Where:** `/registry` table + routing cards.
+- **Remediation:** Fixed — tables are wrapped in `.table-wrap` (`overflow-x: auto`) with `white-space: nowrap` cells, so the table scrolls inside its card instead of wrapping names or overflowing the page.
+- **Status:** fixed
+
+### Finding 13.5 — Muted gray captions fail WCAG AA contrast (~2.45:1)  [severity: minor]
+- **Pass:** 1 | **Where:** dashboard-wide — stat-tile labels, captions, axis ticks in `--text-muted` #94A3B8 on the near-white canvas.
+- **Remediation:** Fixed — `--text-muted` darkened to slate-500 `#64748B` (~4.6:1 on the canvas, meets AA for normal text). The sidebar's on-dark muted token is separate and unaffected.
+- **Status:** fixed
+
+---
+
+## Persona 14 — Chad Mueller, impatient mobile user / iPhone (dumb-user)
+Goal: glance at the dashboard on a phone (390px portrait). | Outcome: pass 1 **blocked** → **fixed**
+
+### Finding 14.1 — Fixed 240px sidebar never collapses on phone  [severity: blocker]
+- **Pass:** 1 | **Where:** all views at 390px — the left rail ate ~224px of 390, leaving ~166px of content; no hamburger/collapse.
+- **Remediation:** Fixed — added a `@media (max-width: 720px)` breakpoint: `.shell` stacks to a column and `.sidebar` becomes a horizontal top nav bar (wrapping nav pills, wordmark left, "PLATFORM" label hidden). Content is full-width beneath.
+- **Status:** fixed
+
+### Finding 14.2 — Whole page scrolls sideways on phone  [severity: blocker]
+- **Pass:** 1 | **Where:** all views (content 516–559px in a 390px viewport).
+- **Remediation:** Fixed as a consequence of 14.1 (sidebar off the horizontal axis) + the earlier row/grid reflow. Verified: all 5 views report "fits" (no sideways scroll) at 390px.
+- **Status:** fixed
+
+### Finding 14.3 — Text wraps letter-by-letter in squeezed columns  [severity: bug]
+- **Pass:** 1 | **Where:** Registry routing / Leaderboard table / Context paths at ~150px content width.
+- **Remediation:** Fixed — content now gets full width (14.1); tables scroll in `.table-wrap`, routing cards wrap (`.route-grid` flex-wrap), paths use `overflow-wrap: anywhere`.
+- **Status:** fixed
+
+### Finding 14.4 — Topbar title collides with the status pills  [severity: bug]
+- **Pass:** 1 | **Where:** all views — 2-line titles overlapped the "Ollama · local" / health pills.
+- **Remediation:** Fixed — mobile `.topbar` is `flex-wrap: wrap` with `height: auto`, so the title and pills stack instead of overlapping.
+- **Status:** fixed
+
+### Finding 14.5 — "Requests by day" chart renders blank in portrait  [severity: bug]
+- **Pass:** 1 | **Where:** `/adoption` at narrow width — 30 bars with 6px gaps exceeded the container, yielding a negative bar width → blank SVG.
+- **Remediation:** Fixed in `charts.tsx` `BarChart` — gap now `Math.max(1, Math.min(6, w/n/4))` and bar width clamped `≥1`, so it never blanks. Verified: chart renders at 390px.
+- **Status:** fixed
+
+_Landscape (844px) already worked; the fixes make portrait usable too._

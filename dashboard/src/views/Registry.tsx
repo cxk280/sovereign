@@ -18,6 +18,7 @@ export function Registry() {
             </p>
           </div>
           <Card>
+            <div className="table-wrap">
             <table className="table">
               <thead>
                 <tr>
@@ -44,6 +45,7 @@ export function Registry() {
                 ))}
               </tbody>
             </table>
+            </div>
           </Card>
           <Card title="Active routing" meta="read-only in this build">
             <div className="route-grid">

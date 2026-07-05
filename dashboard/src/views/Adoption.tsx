@@ -32,7 +32,7 @@ export function Adoption() {
             <Card className="grow" title="Requests by day" meta="last 30 days">
               <BarChart values={data.usage_series} />
             </Card>
-            <Card title="By surface" style={{ width: 380, flexShrink: 0 }}>
+            <Card title="By surface" className="side-card">
               {data.by_surface.map((s) => (
                 <div key={s.label} className="surface">
                   <div className="surface-head">

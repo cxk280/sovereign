@@ -24,7 +24,7 @@ export function Overview() {
             >
               <AreaChart values={data.requests_series} />
             </Card>
-            <Card title="Backend" style={{ width: 380, flexShrink: 0 }}>
+            <Card title="Backend" className="side-card">
               <div className="backend-box">
                 <div className="backend-box-head">
                   <span className="dot" />

@@ -33,7 +33,7 @@ export function Context() {
             <Card
               title="Indexed sources"
               meta={`${data.total_chunks} chunks · updated ${data.updated}`}
-              style={{ width: 360, flexShrink: 0 }}
+              className="side-card"
             >
               {data.sources.map((s) => (
                 <div key={s.name} className="source-row">
@@ -57,11 +57,20 @@ export function Context() {
               ))}
             </Card>
             <Card className="grow" title="Retrieval preview">
-              <div className="search-box">
+              <p className="preview-caption">
+                A sample query and the top grounded chunks the RAG layer returns — an
+                illustrative, read-only preview (not a live search in this build).
+              </p>
+              <label className="search-box">
                 <Icon name="search" />
-                <span className="query">{data.query}</span>
-                <span className="hint">top {data.results.length} · read-only</span>
-              </div>
+                <input
+                  className="query"
+                  value={data.query}
+                  readOnly
+                  aria-label="Example retrieval query (read-only preview)"
+                />
+                <span className="hint">example · top {data.results.length}</span>
+              </label>
               {data.results.map((r) => (
                 <div key={r.path} className="result-card">
                   <div className="result-head">

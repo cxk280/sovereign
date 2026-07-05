@@ -84,13 +84,17 @@ body {
 .page-head { display: flex; flex-direction: column; gap: 3px; }
 .page-title { font-size: 20px; font-weight: 600; margin: 0; }
 .page-sub { font-size: 14px; color: var(--text-secondary); margin: 0; max-width: 900px; }
-.row { display: flex; gap: 20px; align-items: flex-start; }
+/* Two-column card rows reflow to a single column on narrow screens: the main
+   card and the side card each take a flex-basis and wrap when they can't fit. */
+.row { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
 .grow { flex: 1; min-width: 0; }
+.row > .grow { flex: 2 1 360px; }
+.side-card { flex: 1 1 300px; min-width: 0; }
 
 /* --- Stat tiles ------------------------------------------------------------ */
-.stat-row { display: flex; gap: 16px; }
+/* Auto-fitting grid so tiles wrap instead of crushing/clipping when narrow. */
+.stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
 .stat-tile {
-  flex: 1;
   min-width: 0;
   background: var(--surface);
   border: var(--border-w) solid var(--border-subtle);
@@ -118,7 +122,11 @@ body {
 .card-meta { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--text-muted); }
 
 /* --- Tables ---------------------------------------------------------------- */
+/* Wide tables scroll horizontally inside their card rather than overflowing the
+   page or wrapping model names one syllable per line. */
+.table-wrap { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; }
+.table th, .table td { white-space: nowrap; }
 .table th {
   text-align: left;
   font-size: 12px;
@@ -203,6 +211,7 @@ body {
 .source-count .n { font-size: 14px; font-weight: 500; color: var(--text-primary); }
 .source-count .u { font-size: 12px; color: var(--text-muted); }
 
+.preview-caption { font-size: 12px; color: var(--text-muted); margin: 0 0 12px; }
 .search-box {
   display: flex;
   align-items: center;
@@ -214,8 +223,23 @@ body {
   margin-bottom: 14px;
 }
 .search-box svg { width: 18px; height: 18px; stroke: var(--text-muted); fill: none; stroke-width: 2; flex-shrink: 0; }
-.search-box .query { color: var(--text-primary); font-size: 14px; }
-.search-box .hint { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--text-muted); }
+/* Real read-only input: keyboard-focusable + announced as read-only, but reset
+   to look like the surrounding box rather than an empty editable field. */
+.search-box input.query {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text-primary);
+  padding: 0;
+  outline: none;
+  cursor: default;
+  text-overflow: ellipsis;
+}
+.search-box:focus-within { border-color: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-100); }
+.search-box .hint { font-size: 12px; font-weight: 500; color: var(--text-muted); flex-shrink: 0; }
 .result-card {
   background: var(--canvas);
   border: var(--border-w) solid var(--border-subtle);
@@ -229,10 +253,34 @@ body {
 .result-card:last-child { margin-bottom: 0; }
 .result-head { display: flex; align-items: center; gap: 10px; }
 .result-title { font-size: 14px; font-weight: 500; color: var(--text-primary); }
-.result-path { font-size: 12px; font-weight: 500; color: var(--indigo); word-break: break-all; }
+.result-path { font-size: 12px; font-weight: 500; color: var(--indigo); overflow-wrap: anywhere; }
+.chart-scroll { overflow-x: auto; }
 .result-snippet { font-size: 14px; color: var(--text-secondary); }
 .score-badge { margin-left: auto; background: var(--emerald-100); color: var(--emerald); border-radius: var(--radius-pill); padding: 3px 9px; font-size: 12px; font-weight: 500; white-space: nowrap; }
 
 /* --- States ---------------------------------------------------------------- */
 .state { padding: 40px; color: var(--text-muted); font-size: 14px; }
 .state.error { color: var(--red); }
+
+/* --- Mobile / narrow: the fixed side rail becomes a top bar ----------------- */
+/* Below this width a 240px left rail would eat a phone screen, so the shell
+   stacks: sidebar → horizontal nav bar on top, content full-width beneath.
+   (The card rows and stat grid already reflow via flex-wrap / auto-fit above.) */
+@media (max-width: 720px) {
+  .shell { flex-direction: column; }
+  .sidebar {
+    width: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px;
+  }
+  .sidebar-wordmark { padding: 0; margin-right: 6px; }
+  .sidebar-section { display: none; }
+  .nav-item { padding: 8px 12px; }
+  .topbar { height: auto; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 14px 16px; }
+  .topbar-right { margin-left: 0; }
+  .content { padding: 16px; }
+  .route-grid { flex-wrap: wrap; }
+}
