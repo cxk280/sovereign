@@ -41,6 +41,16 @@ def _backend_label(backend: str) -> str:
     return {"ollama": _LOCAL_BACKEND_LABEL, "vllm": "vLLM · Vultr A16"}.get(backend, backend)
 
 
+# Honest provenance labels for a measured run, keyed by the bench.meta.json "host".
+# The serving pill and note are driven by *where the numbers were actually measured*
+# — never inferred — so CPU numbers can never be shown as A16 GPU numbers. A host of
+# "local"/unknown/absent falls through to the generic measured note below.
+_MEASURED_HOST: dict[str, tuple[str, str]] = {
+    "vultr-cpu": ("Ollama · Vultr CPU", "Latency & tokens/sec measured on Vultr CPU compute"),
+    "vultr-a16": ("vLLM · Vultr A16", "Latency & tokens/sec measured on Vultr A16"),
+}
+
+
 def _fmt_latency(seconds: float) -> str:
     return f"{seconds * 1000:.0f} ms" if seconds < 1 else f"{seconds:.2f} s"
 
@@ -63,17 +73,26 @@ def build_overview(registry: Registry, results_dir: Path | None = None) -> Overv
     active = registry.models[0] if registry.models else None
 
     note = "vLLM · Vultr A16 available for benchmark runs"
+    serving = _backend_label(active.backend) if active else _LOCAL_BACKEND_LABEL
     results = load_eval_results(results_dir)
     if results.has_bench:
         _apply_measured_perf(stats, results.bench[0])
-        note = (
-            "Latency & tokens/sec measured on Vultr A16"
-            if active and active.backend == "vllm"
-            else "Latency & tokens/sec measured from a real eval run"
-        )
+        # Label from provenance only: a known measured host sets both the serving
+        # pill and the note; anything else stays honest-but-generic.
+        measured = _MEASURED_HOST.get(results.host or "")
+        if measured:
+            serving, note = measured
+        else:
+            note = "Latency & tokens/sec measured from a real eval run"
+            # Numbers of unknown provenance must never inherit a location-specific
+            # GPU claim from the registry (e.g. a vLLM active model would make
+            # `serving` read "vLLM · Vultr A16"). Fall back to a neutral label so
+            # measured numbers can never be shown as A16/GPU without proof.
+            if "Vultr" in serving or "vLLM" in serving:
+                serving = "Measured — backend unspecified"
 
     backend = BackendPanel(
-        serving=_backend_label(active.backend) if active else _LOCAL_BACKEND_LABEL,
+        serving=serving,
         model=active.name if active else "—",
         quant=(active.quantization or "—") if active else "—",
         readiness=[Readiness(**r) for r in fx.OVERVIEW_READINESS],

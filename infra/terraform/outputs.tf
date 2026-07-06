@@ -3,6 +3,11 @@ output "gpu_bench_ip" {
   description = "Public IP of the A16 benchmark instance (vLLM on :8000)."
 }
 
+output "cpu_bench_ip" {
+  value       = vultr_instance.cpu_bench.main_ip
+  description = "Public IP of the CPU benchmark instance (Ollama on :8000)."
+}
+
 output "vke_kubeconfig" {
   value       = var.enable_vke ? vultr_kubernetes.vke[0].kube_config : ""
   sensitive   = true

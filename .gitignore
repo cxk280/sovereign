@@ -49,3 +49,4 @@ crash.log
 # Eval / reports output (generated)
 eval/results/*.json
 !eval/results/.gitkeep
+docs/EDGE_CASES.md

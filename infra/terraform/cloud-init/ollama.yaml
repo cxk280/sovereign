@@ -1,0 +1,24 @@
+#cloud-config
+# Make a GPU-less CPU instance benchmark-ready on boot: install Ollama and serve
+# the quantized coder model on an OpenAI-compatible endpoint (:8000) — the same
+# port the vLLM cloud-init and the firewall use, so the eval/benchmark harness
+# targets it unchanged. CPU-only (no CUDA), which is why it costs cents to bench.
+package_update: true
+packages:
+  - curl
+write_files:
+  # Bind Ollama to 0.0.0.0:8000 (default is 127.0.0.1:11434). Written before the
+  # installer starts the unit so the first boot already listens on :8000; the
+  # daemon-reload + restart below makes it robust regardless of install ordering.
+  - path: /etc/systemd/system/ollama.service.d/override.conf
+    content: |
+      [Service]
+      Environment=OLLAMA_HOST=0.0.0.0:8000
+runcmd:
+  - curl -fsSL https://ollama.com/install.sh | sh
+  - systemctl daemon-reload
+  - systemctl restart ollama
+  # Pull the registry-default model. The CLI talks to the daemon, which now
+  # listens on :8000, so point it there. /v1/models lists the model only once
+  # this pull completes — which is exactly what bench-vultr-cpu.sh waits on.
+  - OLLAMA_HOST=127.0.0.1:8000 ollama pull qwen2.5-coder:1.5b

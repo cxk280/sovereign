@@ -193,3 +193,85 @@ def test_overview_sub_second_latency_formats_as_ms(tmp_path: Path) -> None:
     body = _client_with_results(tmp_path).get("/api/overview").json()
     tiles = {s["label"]: s for s in body["stats"]}
     assert tiles["AVG LATENCY"]["value"] == "420 ms"  # GPU-speed latency reads in ms
+
+
+# --- honest provenance labels (bench.meta.json "host") ----------------------
+def _write_bench(tmp_path: Path, host: str | None) -> None:
+    (tmp_path / "bench.json").write_text(
+        json.dumps(
+            [{"model": _MEASURED_MODEL, "requests": 8, "avg_latency_s": 4.6, "tokens_per_s": 11.0}]
+        )
+    )
+    if host is not None:
+        (tmp_path / "bench.meta.json").write_text(json.dumps({"host": host}))
+
+
+def test_overview_labels_vultr_cpu_from_provenance(tmp_path: Path) -> None:
+    _write_bench(tmp_path, host="vultr-cpu")
+    body = _client_with_results(tmp_path).get("/api/overview").json()
+    backend = body["backend"]
+    assert backend["serving"] == "Ollama · Vultr CPU"
+    assert backend["note"] == "Latency & tokens/sec measured on Vultr CPU compute"
+    # The A16 GPU must never be implied for a CPU run.
+    assert "A16" not in backend["note"] and "GPU" not in backend["note"]
+
+
+def test_overview_host_is_trimmed_before_lookup(tmp_path: Path) -> None:
+    # EC-3: whitespace around a known host still resolves to the honest CPU label.
+    _write_bench(tmp_path, host="  vultr-cpu  ")
+    backend = _client_with_results(tmp_path).get("/api/overview").json()["backend"]
+    assert backend["serving"] == "Ollama · Vultr CPU"
+
+
+def test_overview_labels_vultr_a16_from_provenance(tmp_path: Path) -> None:
+    _write_bench(tmp_path, host="vultr-a16")
+    backend = _client_with_results(tmp_path).get("/api/overview").json()["backend"]
+    assert backend["serving"] == "vLLM · Vultr A16"
+    assert backend["note"] == "Latency & tokens/sec measured on Vultr A16"
+
+
+def test_overview_cpu_numbers_never_mislabeled_as_a16_even_with_stale_expectations(
+    tmp_path: Path,
+) -> None:
+    # A local-registry (ollama) box: without provenance the note is generic, and
+    # with vultr-cpu provenance it is CPU — never A16, which is the whole point.
+    _write_bench(tmp_path, host=None)
+    note_no_host = _client_with_results(tmp_path).get("/api/overview").json()["backend"]["note"]
+    assert note_no_host == "Latency & tokens/sec measured from a real eval run"
+    _write_bench(tmp_path, host="vultr-cpu")
+    note_cpu = _client_with_results(tmp_path).get("/api/overview").json()["backend"]["note"]
+    assert "A16" not in note_no_host and "A16" not in note_cpu
+
+
+def test_overview_unknown_host_falls_back_to_generic_measured_note(tmp_path: Path) -> None:
+    _write_bench(tmp_path, host="some-other-cloud")
+    backend = _client_with_results(tmp_path).get("/api/overview").json()["backend"]
+    # Unknown host: honest-but-generic, serving stays the registry-derived label.
+    assert backend["note"] == "Latency & tokens/sec measured from a real eval run"
+    assert backend["serving"] == "Ollama · local"
+
+
+def test_overview_survives_malformed_bench_meta(tmp_path: Path) -> None:
+    _write_bench(tmp_path, host=None)
+    (tmp_path / "bench.meta.json").write_text("{ not valid json")
+    backend = _client_with_results(tmp_path).get("/api/overview").json()["backend"]  # no 500
+    assert backend["note"] == "Latency & tokens/sec measured from a real eval run"
+
+
+def test_unknown_provenance_never_inherits_a16_pill_from_vllm_registry(tmp_path: Path) -> None:
+    # Airtight-invariant guard: even if a vLLM model were the active one (its label is
+    # "vLLM · Vultr A16"), measured numbers with absent/unknown provenance must NOT be
+    # shown under a Vultr/GPU serving pill.
+    vllm_registry = Registry(
+        models=[
+            ModelSpec(name="qwen2.5-coder:7b", version="7b", backend="vllm", quantization="AWQ")
+        ],
+        routing=RoutingConfig(default="qwen2.5-coder:7b"),
+    )
+    client = TestClient(
+        create_app(vllm_registry, sample_data=REPO_ROOT / "sample_data", results_dir=tmp_path)
+    )
+    _write_bench(tmp_path, host=None)  # measured numbers, provenance unknown
+    backend = client.get("/api/overview").json()["backend"]
+    assert "A16" not in backend["serving"] and "Vultr" not in backend["serving"]
+    assert "A16" not in backend["note"] and "GPU" not in backend["note"]

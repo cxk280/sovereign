@@ -35,6 +35,7 @@ class EvalResults:
 
     bench: list[BenchMeasurement]
     leaderboard: dict[str, dict[str, float]]  # model -> {task: rate, "overall": rate}
+    host: str | None = None  # provenance from bench.meta.json: where the bench ran
 
     @property
     def has_bench(self) -> bool:
@@ -80,6 +81,19 @@ def _parse_bench(raw: object | None) -> list[BenchMeasurement]:
     return out
 
 
+def _parse_host(raw: object | None) -> str | None:
+    """Pull the ``host`` provenance label out of ``bench.meta.json`` if present.
+    Trimmed and normalized to None when blank; an unknown value is harmless (the
+    dashboard degrades to a generic-but-honest note, never a wrong label)."""
+    if not isinstance(raw, dict):
+        return None
+    host = raw.get("host")
+    if not isinstance(host, str):
+        return None
+    host = host.strip()
+    return host or None
+
+
 def _parse_leaderboard(raw: object | None) -> dict[str, dict[str, float]]:
     if not isinstance(raw, dict):
         return {}
@@ -104,4 +118,5 @@ def load_eval_results(results_dir: Path | None = None) -> EvalResults:
     return EvalResults(
         bench=_parse_bench(_read_json(d / "bench.json")),
         leaderboard=_parse_leaderboard(_read_json(d / "leaderboard.json")),
+        host=_parse_host(_read_json(d / "bench.meta.json")),
     )
