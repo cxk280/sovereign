@@ -5,11 +5,16 @@
 # no GPU access required. Requires TF_VAR_vultr_api_key. Mirrors bench-vultr.sh.
 set -euo pipefail
 
-cd "$(dirname "$0")/../terraform"
+# Resolve absolute paths up front so cleanup is cwd-independent: the eval step
+# below runs from the repo root, and the EXIT/INT/TERM trap inherits that cwd —
+# so terraform must be told its dir explicitly (-chdir) or destroy would run
+# against no config and leak a running, billing instance.
+TF_DIR="$(cd "$(dirname "$0")/../terraform" && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 
 cleanup() {
   echo "==> destroying ALL CPU benchmark resources (instance + firewall)"
-  terraform destroy \
+  terraform -chdir="$TF_DIR" destroy \
     -target=vultr_instance.cpu_bench \
     -target=vultr_firewall_rule.cpu_gateway \
     -target=vultr_firewall_rule.cpu_ssh \
@@ -18,15 +23,15 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-terraform init -input=false
-terraform apply \
+terraform -chdir="$TF_DIR" init -input=false
+terraform -chdir="$TF_DIR" apply \
   -target=vultr_instance.cpu_bench \
   -target=vultr_firewall_group.sovereign_cpu \
   -target=vultr_firewall_rule.cpu_ssh \
   -target=vultr_firewall_rule.cpu_gateway \
   -auto-approve
 
-IP="$(terraform output -raw cpu_bench_ip)"
+IP="$(terraform -chdir="$TF_DIR" output -raw cpu_bench_ip)"
 BASE="http://${IP}:8000"
 
 # Bounded wait for readiness. Unlike vLLM (which serves its model as soon as the
@@ -50,7 +55,7 @@ echo "==> Ollama is serving ${MODEL}"
 # CPU inference is far slower than a GPU, so give each request more headroom than
 # the harness default (120s) to avoid a timeout sinking the run.
 echo "==> running eval + benchmark against the real Vultr CPU instance"
-cd ../..
+cd "$REPO_ROOT"
 SOVEREIGN_GATEWAY_URL="${BASE}" SOVEREIGN_EVAL_TIMEOUT="${SOVEREIGN_EVAL_TIMEOUT:-600}" \
   uv run python -m eval \
   --models "${MODEL}" \

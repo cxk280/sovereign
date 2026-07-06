@@ -256,3 +256,22 @@ def test_overview_survives_malformed_bench_meta(tmp_path: Path) -> None:
     (tmp_path / "bench.meta.json").write_text("{ not valid json")
     backend = _client_with_results(tmp_path).get("/api/overview").json()["backend"]  # no 500
     assert backend["note"] == "Latency & tokens/sec measured from a real eval run"
+
+
+def test_unknown_provenance_never_inherits_a16_pill_from_vllm_registry(tmp_path: Path) -> None:
+    # Airtight-invariant guard: even if a vLLM model were the active one (its label is
+    # "vLLM · Vultr A16"), measured numbers with absent/unknown provenance must NOT be
+    # shown under a Vultr/GPU serving pill.
+    vllm_registry = Registry(
+        models=[
+            ModelSpec(name="qwen2.5-coder:7b", version="7b", backend="vllm", quantization="AWQ")
+        ],
+        routing=RoutingConfig(default="qwen2.5-coder:7b"),
+    )
+    client = TestClient(
+        create_app(vllm_registry, sample_data=REPO_ROOT / "sample_data", results_dir=tmp_path)
+    )
+    _write_bench(tmp_path, host=None)  # measured numbers, provenance unknown
+    backend = client.get("/api/overview").json()["backend"]
+    assert "A16" not in backend["serving"] and "Vultr" not in backend["serving"]
+    assert "A16" not in backend["note"] and "GPU" not in backend["note"]

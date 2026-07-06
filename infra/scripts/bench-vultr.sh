@@ -4,11 +4,16 @@
 # TF_VAR_vultr_api_key. This spends money — run deliberately.
 set -euo pipefail
 
-cd "$(dirname "$0")/../terraform"
+# Resolve absolute paths up front so cleanup is cwd-independent: the eval step
+# below runs from the repo root, and the EXIT/INT/TERM trap inherits that cwd —
+# so terraform must be told its dir explicitly (-chdir) or destroy would run
+# against no config and leak a running, billing GPU instance.
+TF_DIR="$(cd "$(dirname "$0")/../terraform" && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 
 cleanup() {
   echo "==> destroying ALL benchmark resources (instance + firewall)"
-  terraform destroy \
+  terraform -chdir="$TF_DIR" destroy \
     -target=vultr_instance.gpu_bench \
     -target=vultr_firewall_rule.gateway \
     -target=vultr_firewall_rule.ssh \
@@ -17,15 +22,15 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-terraform init -input=false
-terraform apply \
+terraform -chdir="$TF_DIR" init -input=false
+terraform -chdir="$TF_DIR" apply \
   -target=vultr_instance.gpu_bench \
   -target=vultr_firewall_group.sovereign \
   -target=vultr_firewall_rule.ssh \
   -target=vultr_firewall_rule.gateway \
   -auto-approve
 
-IP="$(terraform output -raw gpu_bench_ip)"
+IP="$(terraform -chdir="$TF_DIR" output -raw gpu_bench_ip)"
 BASE="http://${IP}:8000"
 
 # Bounded wait: if vLLM isn't serving within READY_TIMEOUT, abort so the trap
@@ -43,7 +48,7 @@ done
 echo "==> vLLM is serving"
 
 echo "==> running eval + benchmark against the real A16"
-cd ../..
+cd "$REPO_ROOT"
 SOVEREIGN_GATEWAY_URL="${BASE}" uv run python -m eval \
   --models "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ" \
   --gateway "${BASE}" \

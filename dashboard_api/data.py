@@ -84,6 +84,12 @@ def build_overview(registry: Registry, results_dir: Path | None = None) -> Overv
             serving, note = measured
         else:
             note = "Latency & tokens/sec measured from a real eval run"
+            # Numbers of unknown provenance must never inherit a location-specific
+            # GPU claim from the registry (e.g. a vLLM active model would make
+            # `serving` read "vLLM · Vultr A16"). Fall back to a neutral label so
+            # measured numbers can never be shown as A16/GPU without proof.
+            if "Vultr" in serving or "vLLM" in serving:
+                serving = "Measured — backend unspecified"
 
     backend = BackendPanel(
         serving=serving,
