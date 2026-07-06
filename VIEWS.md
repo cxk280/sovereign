@@ -16,7 +16,7 @@ Verbal description of every view in `sovereign`. The **only** graphical UI is th
   `local` vs `Vultr GPU`, and a health dot). Content area to the right.
 - **Palette:** indigo `#4F46E5` primary, emerald `#10B981` accent (healthy / sovereign), amber/red for
   warn/error, slate neutrals on a near-white `#F8FAFC` canvas. Cards are white, rounded (12–16px),
-  1.5px slate border. Font: Inter. Theme: light (single theme for the portfolio build).
+  1.5px slate border. Font: Inter. Theme: light (single theme for this build).
 - **Primitives:** stat tile (label + big value + delta), data table, the eval bar chart, a small
   time-series sparkline, status pills.
 
@@ -34,7 +34,7 @@ Platform health at a glance:
 - A **table** of registered models: name, version, quantization, task tags, backend, status
   (active/candidate).
 - A **routing panel**: task → model mappings (code-gen, code-review, test-gen, chat) with the default
-  route highlighted. Read-only in the portfolio build.
+  route highlighted. Read-only in this build.
 
 ### 3. Evaluation leaderboard
 - The **grouped bar chart** from `eval/` (pass rate per model per task).

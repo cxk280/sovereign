@@ -4,12 +4,11 @@
 
 ## Context
 
-This is a public portfolio project with two competing requirements:
+This is a public open-source project with two competing requirements:
 
 - **Near-$0.** Everyday development must cost nothing and run on a laptop with no GPU.
 - **Real Vultr proof.** The platform must genuinely run on Vultr Cloud GPU / VKE / Object Storage —
-  and the leaderboard should carry **measured** numbers, not projections — because that is the
-  target environment for the role.
+  and the leaderboard should carry **measured** numbers, not projections.
 
 Spending money is outward-facing and must be **user-authorized**, never automatic. So the deployment
 model has to make free the default and paid an explicit, bounded, teardown-disciplined action.
@@ -17,8 +16,8 @@ model has to make free the default and paid an explicit, bounded, teardown-disci
 ## Options considered
 
 - **Local only.** Cheapest and safest, but leaves every Vultr claim unproven — all "architected," no
-  "measured." Weak for the stated purpose.
-- **Always-on Vultr.** Most impressive, but burns budget continuously (see
+  "measured." Weak on proof.
+- **Always-on Vultr.** Maximal proof, but burns budget continuously (see
   [`infra/cost.md`](../../infra/cost.md): ~$79/week for an A16 left up) and puts a paid resource in
   the default path. Rejected.
 - **Local default + plan-only IaC + one bounded real run.** Free by default; the full VKE/Object
