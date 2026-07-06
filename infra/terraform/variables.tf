@@ -18,6 +18,15 @@ variable "gpu_plan" {
   description = "Vultr Cloud GPU plan id for the benchmark instance."
 }
 
+# Regular cloud-compute plan for the GPU-less CPU benchmark (cpu-bench.tf). A 1.5B
+# Q4 coder model runs comfortably in 8 GB; High Frequency (vhf-*) plans give better
+# single-thread tokens/sec if you want faster CPU inference. Confirm the current id.
+variable "cpu_plan" {
+  type        = string
+  default     = "vc2-4c-8gb"
+  description = "Vultr cloud-compute plan id for the CPU benchmark instance."
+}
+
 variable "os_id" {
   type        = number
   default     = 1743 # Ubuntu 22.04 LTS x64 (confirm current id)

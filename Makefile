@@ -1,4 +1,4 @@
-.PHONY: help verify tf-plan helm-lint bench-vultr
+.PHONY: help verify tf-plan helm-lint bench-vultr bench-vultr-cpu
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-14s %s\n", $$1, $$2}'
@@ -17,3 +17,6 @@ helm-lint:  ## Lint the VKE Helm chart
 
 bench-vultr:  ## Apply an A16, run the benchmark, then destroy (~$2–10; spends money)
 	bash infra/scripts/bench-vultr.sh
+
+bench-vultr-cpu:  ## Apply a CPU instance, benchmark, then destroy (~cents; no GPU needed)
+	bash infra/scripts/bench-vultr-cpu.sh

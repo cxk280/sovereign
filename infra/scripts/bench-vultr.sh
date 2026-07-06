@@ -48,6 +48,7 @@ SOVEREIGN_GATEWAY_URL="${BASE}" uv run python -m eval \
   --models "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ" \
   --gateway "${BASE}" \
   --out eval/results \
-  --bench
+  --bench \
+  --bench-host vultr-a16
 
 echo "==> done; results in eval/results/ (cleanup runs on exit)"
