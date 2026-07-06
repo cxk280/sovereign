@@ -10,7 +10,7 @@ review, and CI. Two very different environments have to be served from the *same
 - **Local, $0, no GPU** — everyday development on a laptop (an 8 GB Intel Mac here).
 - **Production, Vultr Cloud GPU** — real throughput, CUDA, room to scale to multi-GPU.
 
-The job description names **vLLM, SGLang, and TGI** specifically, so the choice has to be reasoned,
+The leading options are **vLLM, SGLang, and TGI**, so the choice has to be reasoned,
 not defaulted. The non-negotiable constraint is that whatever we pick must speak the **OpenAI
 protocol**, so the gateway, IDEs, and CI never learn which engine is underneath.
 

@@ -19,7 +19,7 @@ balancer ≈ $10/mo (optional).
 | Scenario | GPU | Cost |
 |---|---|---|
 | **One benchmark run** (`make bench-vultr`: apply → benchmark → destroy, ~4h) | A16 | **~$2** |
-| Live demo for the interview (~8h serving) | A16 | ~$4 |
+| Live demo (~8h serving) | A16 | ~$4 |
 | Left up a week (24×7) | A16 | ~$79 |
 | Always-on for a month (upper bound, not recommended) | A16 / L40S | ~$344 / ~$1,220 |
 
