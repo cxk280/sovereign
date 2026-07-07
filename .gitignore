@@ -46,7 +46,7 @@ crash.log
 .vscode/*
 !.vscode/extensions.json
 
-# Eval / reports output (generated)
-eval/results/*.json
+# Eval / reports output (generated: bench/leaderboard json, md tables, png charts)
+eval/results/*
 !eval/results/.gitkeep
 docs/EDGE_CASES.md

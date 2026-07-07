@@ -177,6 +177,50 @@ def test_leaderboard_all_fixtures_when_results_absent(tmp_path: Path) -> None:
     assert all(r["measured"] is False for r in body["rows"])
 
 
+# --- leaderboard note provenance (honesty invariant) ------------------------
+def _write_leaderboard(tmp_path: Path, host: str | None) -> None:
+    scores = {"code-gen": 0.9, "code-review": 0.8, "test-gen": 0.7, "overall": 0.8}
+    (tmp_path / "leaderboard.json").write_text(json.dumps({_MEASURED_MODEL: scores}))
+    if host is not None:
+        (tmp_path / "bench.meta.json").write_text(json.dumps({"host": host}))
+
+
+def test_leaderboard_note_has_no_benchmark_host_claim_when_all_fixtures(tmp_path: Path) -> None:
+    # With nothing measured, the note must not claim any benchmark ran at all —
+    # in particular never "Vultr A16", which used to be hardcoded in the fixture.
+    note = _client_with_results(tmp_path).get("/api/leaderboard").json()["note"]
+    assert "A16" not in note and "Benchmarked" not in note
+    assert "measured" not in note.lower()
+
+
+def test_leaderboard_note_labels_local_provenance_never_a16(tmp_path: Path) -> None:
+    # The exact bug: a real *local* measured row must never sit under a "Vultr A16" claim.
+    _write_leaderboard(tmp_path, host="local")
+    note = _client_with_results(tmp_path).get("/api/leaderboard").json()["note"]
+    assert "locally on this machine" in note
+    assert "A16" not in note and "Vultr" not in note and "GPU" not in note
+
+
+def test_leaderboard_note_labels_vultr_cpu_provenance(tmp_path: Path) -> None:
+    _write_leaderboard(tmp_path, host="vultr-cpu")
+    note = _client_with_results(tmp_path).get("/api/leaderboard").json()["note"]
+    assert "Vultr CPU compute" in note
+    assert "A16" not in note and "GPU" not in note
+
+
+def test_leaderboard_note_labels_vultr_a16_only_with_a16_provenance(tmp_path: Path) -> None:
+    _write_leaderboard(tmp_path, host="vultr-a16")
+    note = _client_with_results(tmp_path).get("/api/leaderboard").json()["note"]
+    assert "Vultr A16 GPU" in note
+
+
+def test_leaderboard_note_unknown_host_stays_generic(tmp_path: Path) -> None:
+    _write_leaderboard(tmp_path, host="some-other-cloud")
+    note = _client_with_results(tmp_path).get("/api/leaderboard").json()["note"]
+    assert note.endswith("Rows marked measured come from a real eval run.")
+    assert "A16" not in note
+
+
 def test_overview_empty_bench_list_falls_back_to_fixtures(tmp_path: Path) -> None:
     (tmp_path / "bench.json").write_text("[]")  # present but no rows
     body = _client_with_results(tmp_path).get("/api/overview").json()
