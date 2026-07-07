@@ -131,7 +131,7 @@ LEADERBOARD: list[LeaderboardEntry] = [
 ]
 LEADERBOARD_NOTE = (
     "Deployed locally as qwen2.5-coder:1.5b (Q4_K_M) — the same family at a "
-    "laptop-sized quant. Benchmarked against a Vultr A16."
+    "laptop-sized quant."
 )
 
 # --- Adoption -----------------------------------------------------------------

@@ -50,6 +50,16 @@ _MEASURED_HOST: dict[str, tuple[str, str]] = {
     "vultr-a16": ("vLLM · Vultr A16", "Latency & tokens/sec measured on Vultr A16"),
 }
 
+# Where a measured *leaderboard* row actually ran, phrased for the note and keyed by
+# the same bench.meta.json "host" provenance. This is what stops the leaderboard from
+# claiming a Vultr A16 for numbers that were really measured on a laptop or a CPU box —
+# an unknown/absent host degrades to a generic "real eval run", never a location.
+_MEASURED_LEADERBOARD_HOST: dict[str, str] = {
+    "local": "locally on this machine",
+    "vultr-cpu": "on Vultr CPU compute",
+    "vultr-a16": "on a Vultr A16 GPU",
+}
+
 
 def _fmt_latency(seconds: float) -> str:
     return f"{seconds * 1000:.0f} ms" if seconds < 1 else f"{seconds:.2f} s"
@@ -174,7 +184,13 @@ def build_leaderboard(results_dir: Path | None = None) -> LeaderboardPayload:
     results = load_eval_results(results_dir)
     if results.has_leaderboard:
         rows = _merge_measured_leaderboard(rows, tasks, results.leaderboard)
-        note = f"{fx.LEADERBOARD_NOTE} Rows marked measured come from a real eval run."
+        # Describe where the measured rows ran from provenance only — never imply a
+        # Vultr A16 for numbers that came off a laptop or a CPU box.
+        where = _MEASURED_LEADERBOARD_HOST.get(results.host or "")
+        if where:
+            note = f"{fx.LEADERBOARD_NOTE} Rows marked measured were benchmarked {where}."
+        else:
+            note = f"{fx.LEADERBOARD_NOTE} Rows marked measured come from a real eval run."
 
     rows.sort(key=lambda r: r.overall, reverse=True)
     return LeaderboardPayload(tasks=tasks, rows=rows, note=note)
