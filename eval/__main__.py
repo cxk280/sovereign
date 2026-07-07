@@ -23,6 +23,14 @@ from eval.tasks import load_codegen, load_review, load_testgen
 _DEFAULT_TIMEOUT_S = 120.0
 
 
+def _positive_int(raw: str) -> int:
+    """argparse type for --samples: must be a whole number >= 1."""
+    value = int(raw)
+    if value < 1:
+        raise argparse.ArgumentTypeError("must be an integer >= 1")
+    return value
+
+
 def _eval_timeout() -> float:
     """Per-request timeout from SOVEREIGN_EVAL_TIMEOUT (CPU runs are slow), tolerant
     of a missing/empty/garbage value — fall back to the default rather than crash."""
@@ -73,6 +81,26 @@ def main(argv: list[str] | None = None) -> None:
             "defaults to 'local'"
         ),
     )
+    ap.add_argument(
+        "--samples",
+        type=_positive_int,
+        default=1,
+        help=(
+            "generations per task (default 1). >1 runs each task N times and averages "
+            "the pass rate, reducing the variance of a single nonzero-temperature sample"
+        ),
+    )
+    ap.add_argument(
+        "--judge-model",
+        default=None,
+        help=(
+            "model name (served on the same --gateway) to use as an LLM-as-judge for "
+            "code-review scoring — asks whether the review found the real bug, instead of "
+            "matching keywords. Omit to use the keyword scorer. Note: locally the judge "
+            "may be the same small model judging itself, a weaker signal than a stronger "
+            "independent judge."
+        ),
+    )
     args = ap.parse_args(argv)
 
     # A GPU-less CPU instance serves far slower than vLLM on a GPU, so allow the
@@ -83,7 +111,13 @@ def main(argv: list[str] | None = None) -> None:
         for m in args.models.split(",")
         if m.strip()
     ]
-    lb = build_leaderboard(run_suite(clients))
+    # An LLM-as-judge for code-review, served on the same gateway, when requested.
+    judge: ModelClient | None = (
+        GatewayClient(args.gateway, args.judge_model.strip(), timeout=timeout)
+        if args.judge_model and args.judge_model.strip()
+        else None
+    )
+    lb = build_leaderboard(run_suite(clients, samples=args.samples, judge=judge))
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
